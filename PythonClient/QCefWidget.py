@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import *
 import platform
 from cefpython3 import cefpython as cef
 import ctypes
-
+import sys
 # Platforms
 WINDOWS = (platform.system() == "Windows")
 LINUX = (platform.system() == "Linux")
@@ -33,7 +33,8 @@ class QCefWidget(QWidget):
         else:
             window_info.SetAsChild(self.winId(), rect)
 
-        self.browser = cef.CreateBrowserSync(window_info, url="https://www.baidu.com")
+        demofile = sys.path[0] + "/login.html"
+        self.browser = cef.CreateBrowserSync(window_info, url=demofile)
 
     def moveEvent(self, _):
         self.x = 0
