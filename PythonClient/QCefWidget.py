@@ -10,6 +10,8 @@ WINDOWS = (platform.system() == "Windows")
 LINUX = (platform.system() == "Linux")
 MAC = (platform.system() == "Darwin")
 
+# Todo 封装一些常用的函数调用操作
+
 class QCefWidget(QWidget):
     def __init__(self, parent=None):
         # noinspection PyArgumentList
@@ -33,7 +35,8 @@ class QCefWidget(QWidget):
         else:
             window_info.SetAsChild(self.winId(), rect)
 
-        demofile = sys.path[0] + "/login.html"
+        #demofile = sys.path[0] + "/login.html"
+        demofile = "https://www.baidu.com"
         self.browser = cef.CreateBrowserSync(window_info, url=demofile)
 
     def moveEvent(self, _):

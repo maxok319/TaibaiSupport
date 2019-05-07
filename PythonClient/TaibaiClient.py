@@ -1,10 +1,12 @@
 import sys
 from QCefApplication import QCefApplication
-from QCefWidget import QCefWidget
+from TaibaiMainWidget import TaibaiMainWidget
+import websocket
 
 def main():
+    websocket.enableTrace(True)
     app = QCefApplication(sys.argv)
-    widget = QCefWidget()
+    widget = TaibaiMainWidget()
     widget.resize(800, 600)
     widget.show()
     app.exec_()
