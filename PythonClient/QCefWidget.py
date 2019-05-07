@@ -13,12 +13,13 @@ MAC = (platform.system() == "Darwin")
 # Todo 封装一些常用的函数调用操作
 
 class QCefWidget(QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, url="about:blank", parent=None):
         # noinspection PyArgumentList
         super(QCefWidget, self).__init__(parent)
         self.resize(800,600)
         self.browser = None
         self.WindowUtils = cef.WindowUtils()
+        self.url = url
 
         self.layout = QHBoxLayout(self)
         self.layout.setSpacing(0)
@@ -35,9 +36,12 @@ class QCefWidget(QWidget):
         else:
             window_info.SetAsChild(self.winId(), rect)
 
-        #demofile = sys.path[0] + "/login.html"
-        demofile = "https://www.baidu.com"
-        self.browser = cef.CreateBrowserSync(window_info, url=demofile)
+        self.browser = cef.CreateBrowserSync(window_info, url=self.url)
+
+    def bindCefObject(self, cefObjectName, cefObject):
+        self.cefbings = cef.JavascriptBindings(bindToFrames=False, bindToPopups=False)
+        self.cefbings.SetObject(cefObjectName, cefObject)
+        self.browser.SetJavascriptBindings(self.cefbings)
 
     def moveEvent(self, _):
         self.x = 0

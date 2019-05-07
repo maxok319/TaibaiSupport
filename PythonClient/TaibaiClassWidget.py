@@ -1,6 +1,7 @@
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
+from PyQt5.QtWebSockets import *
 import platform
 import ctypes
 import sys
@@ -13,17 +14,32 @@ class TaibaiClassWidget(QWidget):
         self.layout = QHBoxLayout(self)
         self.layout.setSpacing(0)
         self.layout.setContentsMargins(0, 0, 0, 0)
-        self.cefwidget = QCefWidget()
+        demofile = "file://" + sys.path[0] + "/classroom.html"
+        self.cefwidget = QCefWidget(demofile)
         self.layout.addWidget(self.cefwidget)
 
-        self.wsurl = "ws://127.0.0.1:8888/ws?classroomId=123&userId=111"
-        self.ws = TaibaiWebsocket(self.wsurl)
-        self.ws.signal_on_message.connect(self.on_ws_message)
-
-        self.ws.start()
+        self.client = QWebSocket("",QWebSocketProtocol.Version13,None)
+        self.client.connected.connect(self.connected)
+        self.client.error.connect(self.error)
+        self.client.disconnected.connect(self.disconnected)
+        self.client.textMessageReceived.connect(self.textMessageReceived)
     
-    @pyqtSlot('QString')
-    def on_ws_message(self, message):
+    def startWS(self, wsurl):
+        self.client.open(QUrl(wsurl))
+
+    def connected(self):
+        print("connected")
+    
+    def disconnected(self):
+        print("disconnected")
+
+    def error(self, error_code):
+        print(self.client.errorString())
+    
+    def textMessageReceived(self, message):
         print(message)
+
+    
+
 
         
