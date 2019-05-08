@@ -99,8 +99,6 @@ func (this *TaibaiClassroomManager) ParticipantOffline(classroomId, userId int) 
 	defer this.OperationRWMux.Unlock()
 
 	classroom, _ := this.ClassroomMap[classroomId]
-	participant := classroom.addParticipant(userId)
-	participant.SetConn(nil)
 
 	// 通知教室里其他在线的人 有人掉线了
 	message := fmt.Sprintf("%d is offline", userId)

@@ -44,21 +44,14 @@ func (this *TaibaiClassParticipant) SetConn(conn *websocket.Conn) {
 	this.operateMutex.Lock()
 	defer this.operateMutex.Unlock()
 
-	// 先断掉原来老的websocket
+	// 保存老的websocket
 	oldConn := this.Conn
 
+	this.Conn = conn
+	this.Online = true
+	go this.ReadLoop(this.Conn)
 
-	// 这次是要来了空的
-	if conn == nil {
-		log.Println("selt conn nil")
-		this.Conn = nil
-		this.Online = false
-	} else {
-		this.Conn = conn
-		this.Online = true
-		go this.ReadLoop(this.Conn)
-	}
-
+	// 在最后断掉老的
 	if oldConn != nil {
 		err := oldConn.Close()
 		if err != nil {
@@ -80,6 +73,8 @@ func (this *TaibaiClassParticipant) ReadLoop(Conn* websocket.Conn) {
 				Conn:        nil,
 			}
 			if Conn==this.Conn {
+				this.Conn= nil
+				this.Online = false
 				TaibaiClassroomManagerInstance.LeavingWsChan <- wsEvent
 			}
 			return
