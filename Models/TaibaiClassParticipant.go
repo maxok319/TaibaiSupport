@@ -74,3 +74,10 @@ func (this *TaibaiClassParticipant) ReadLoop()  {
 		log.Printf("recv: %s", message)
 	}
 }
+
+func (this *TaibaiClassParticipant) SendMessage(message string)  {
+	defer func() {recover()}()
+	if this.Conn!=nil {
+		this.Conn.WriteMessage(websocket.TextMessage, []byte(message))
+	}
+}

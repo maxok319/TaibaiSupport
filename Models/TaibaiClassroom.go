@@ -25,3 +25,15 @@ func NewTaibaiClassroom(classroomId int)  *TaibaiClassroom {
 
 	return classroom
 }
+
+func (this *TaibaiClassroom) broadcastMessage(message string)  {
+	for _, p := range this.Participants {
+		p.SendMessage(message)
+	}
+}
+
+func (this *TaibaiClassroom) singleMessage(userId int, message string)  {
+	if p, ok := this.Participants[userId]; ok{
+		p.SendMessage(message)
+	}
+}

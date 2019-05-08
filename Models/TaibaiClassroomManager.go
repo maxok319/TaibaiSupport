@@ -1,6 +1,7 @@
 package Models
 
 import (
+	"fmt"
 	"github.com/gorilla/websocket"
 	"sync"
 )
@@ -93,6 +94,8 @@ func (this *TaibaiClassroomManager) ParticipantOnline(classroomId, userId int, c
 	participant.SetConn(conn)
 
 	// 通知教室里其他在线的人 有人上线了
+	message := fmt.Sprintf("%d is online", userId)
+	classroom.broadcastMessage(message)
 }
 
 // 用户下线
@@ -114,6 +117,8 @@ func (this *TaibaiClassroomManager) ParticipantOffline(classroomId, userId int) 
 	participant.SetConn(nil)
 
 	// 通知教室里其他在线的人 有人掉线了
+	message := fmt.Sprintf("%d is offline", userId)
+	classroom.broadcastMessage(message)
 }
 
 
