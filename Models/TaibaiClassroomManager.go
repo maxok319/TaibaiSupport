@@ -1,7 +1,6 @@
 package Models
 
 import (
-	"fmt"
 	"github.com/gorilla/websocket"
 	"log"
 	"sync"
@@ -39,19 +38,14 @@ func (this *TaibaiClassroomManager) PendingNewWs() {
 		log.Println("pendingNewWs")
 
 		// 未注册教室 先注册教室
-		if _, ok := this.GetClassroom(ws.ClassroomId); !ok {
-			this.RegisterClassroom(NewTaibaiClassroom(ws.ClassroomId))
+		classroom, ok := this.ClassroomMap[ws.ClassroomId]
+		if !ok {
+			classroom = NewTaibaiClassroom(ws.ClassroomId)
+			this.RegisterClassroom(classroom)
 		}
 
-		// 让用户上线
-		classroom, _ := this.ClassroomMap[ws.ClassroomId]
-		participant := classroom.addParticipant(ws.UserId)
-		participant.SetConn(ws.Conn)
-
-		// 通知教室里其他在线的人 有人上线了
-		message := fmt.Sprintf("%d is online", ws.UserId)
-		classroom.broadcastMessage(message)
-
+		// 让用户加入教室
+		classroom.participantOnline(ws)
 	}
 }
 
@@ -60,24 +54,14 @@ func (this *TaibaiClassroomManager) LeavingOldWs() {
 		log.Println("leavingOldWs")
 
 		// 没找到教室 直接退出
-		if _, ok := this.GetClassroom(ws.ClassroomId); !ok {
+		classroom, ok := this.ClassroomMap[ws.ClassroomId]
+		if !ok {
 			return
 		}
 
-		// 通知教室里其他在线的人 有人掉线了
-		classroom, _ := this.ClassroomMap[ws.ClassroomId]
-		message := fmt.Sprintf("%d is offline", ws.UserId)
-		classroom.broadcastMessage(message)
+		// 让用户离开教室
+		classroom.participantOffline(ws)
 	}
-}
-
-// 查询教室
-func (this *TaibaiClassroomManager) GetClassroom(classroomId int) (classroom *TaibaiClassroom, ok bool) {
-	this.OperationRWMux.RLock()
-	defer this.OperationRWMux.RUnlock()
-
-	classroom, ok = this.ClassroomMap[classroomId]
-	return
 }
 
 // 注册教室
