@@ -3,13 +3,14 @@ package Models
 import (
 	"fmt"
 	"github.com/gorilla/websocket"
+	"log"
 	"sync"
 )
 
 type TaibaiUserWsEvent struct {
 	ClassroomId int
-	UserId int
-	Conn *websocket.Conn
+	UserId      int
+	Conn        *websocket.Conn
 }
 
 type TaibaiClassroomManager struct {
@@ -20,11 +21,11 @@ type TaibaiClassroomManager struct {
 	LeavingWsChan chan TaibaiUserWsEvent
 }
 
-func NewTaibaiClassroomManager() *TaibaiClassroomManager{
+func NewTaibaiClassroomManager() *TaibaiClassroomManager {
 	M := &TaibaiClassroomManager{
-		ClassroomMap:make(map[int]*TaibaiClassroom),
-		PendingWsChan:make(chan TaibaiUserWsEvent, 3),
-		LeavingWsChan:make(chan TaibaiUserWsEvent, 3),
+		ClassroomMap:  make(map[int]*TaibaiClassroom),
+		PendingWsChan: make(chan TaibaiUserWsEvent, 3),
+		LeavingWsChan: make(chan TaibaiUserWsEvent, 3),
 	}
 
 	go M.PendingNewWs()
@@ -35,9 +36,10 @@ func NewTaibaiClassroomManager() *TaibaiClassroomManager{
 
 func (this *TaibaiClassroomManager) PendingNewWs() {
 	for ws := range this.PendingWsChan {
+		log.Println("pendingNewWs")
 
 		// 未注册教室 先注册教室
-		if _, ok := this.GetClassroom(ws.ClassroomId); !ok{
+		if _, ok := this.GetClassroom(ws.ClassroomId); !ok {
 			this.RegisterClassroom(NewTaibaiClassroom(ws.ClassroomId))
 		}
 
@@ -48,8 +50,10 @@ func (this *TaibaiClassroomManager) PendingNewWs() {
 
 func (this *TaibaiClassroomManager) LeavingOldWs() {
 	for ws := range this.LeavingWsChan {
+		log.Println("leavingOldWs")
+
 		// 没找到教室 直接退出
-		if _, ok := this.GetClassroom(ws.ClassroomId); !ok{
+		if _, ok := this.GetClassroom(ws.ClassroomId); !ok {
 			return
 		}
 
@@ -59,7 +63,7 @@ func (this *TaibaiClassroomManager) LeavingOldWs() {
 }
 
 // 查询教室
-func (this* TaibaiClassroomManager) GetClassroom(classroomId int) (classroom *TaibaiClassroom, ok bool){
+func (this *TaibaiClassroomManager) GetClassroom(classroomId int) (classroom *TaibaiClassroom, ok bool) {
 	this.OperationRWMux.RLock()
 	defer this.OperationRWMux.RUnlock()
 
@@ -80,17 +84,8 @@ func (this *TaibaiClassroomManager) ParticipantOnline(classroomId, userId int, c
 	this.OperationRWMux.Lock()
 	defer this.OperationRWMux.Unlock()
 
-
-	classroom, ok := this.ClassroomMap[classroomId]
-	if  !ok {
-		return
-	}
-
-	participant, ok := classroom.Participants[userId]
-	if  !ok {
-		return
-	}
-
+	classroom, _ := this.ClassroomMap[classroomId]
+	participant := classroom.addParticipant(userId)
 	participant.SetConn(conn)
 
 	// 通知教室里其他在线的人 有人上线了
@@ -103,17 +98,8 @@ func (this *TaibaiClassroomManager) ParticipantOffline(classroomId, userId int) 
 	this.OperationRWMux.Lock()
 	defer this.OperationRWMux.Unlock()
 
-	classroom, ok := this.ClassroomMap[classroomId]
-
-	if  !ok {
-		return
-	}
-
-	participant, ok := classroom.Participants[userId];
-	if  !ok {
-		return
-	}
-
+	classroom, _ := this.ClassroomMap[classroomId]
+	participant := classroom.addParticipant(userId)
 	participant.SetConn(nil)
 
 	// 通知教室里其他在线的人 有人掉线了
@@ -121,9 +107,8 @@ func (this *TaibaiClassroomManager) ParticipantOffline(classroomId, userId int) 
 	classroom.broadcastMessage(message)
 }
 
-
 var TaibaiClassroomManagerInstance *TaibaiClassroomManager
 
-func init()  {
+func init() {
 	TaibaiClassroomManagerInstance = NewTaibaiClassroomManager()
 }
