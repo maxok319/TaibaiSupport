@@ -21,9 +21,9 @@ type TaibaiClassParticipant struct {
 	Role      TaibaiClassRole
 	Online    bool
 	Index     int
+	Rect      TaibaiRect
 
-	Conn *websocket.Conn
-
+	Conn     *websocket.Conn
 	ConnCtx  context.Context
 	ConnStop context.CancelFunc
 
@@ -60,7 +60,7 @@ func (this *TaibaiClassParticipant) SetConn(conn *websocket.Conn) {
 	}
 }
 
-func (this *TaibaiClassParticipant) ReadLoop(Conn* websocket.Conn) {
+func (this *TaibaiClassParticipant) ReadLoop(Conn *websocket.Conn) {
 	defer func() { recover() }()
 	for {
 		_, message, err := Conn.ReadMessage()
@@ -72,8 +72,8 @@ func (this *TaibaiClassParticipant) ReadLoop(Conn* websocket.Conn) {
 				UserId:      this.User.UserId,
 				Conn:        nil,
 			}
-			if Conn==this.Conn {
-				this.Conn= nil
+			if Conn == this.Conn {
+				this.Conn = nil
 				this.Online = false
 				TaibaiClassroomManagerInstance.LeavingWsChan <- wsEvent
 			}

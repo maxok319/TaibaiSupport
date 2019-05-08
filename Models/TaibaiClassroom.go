@@ -4,6 +4,7 @@ import (
 	"TaiBaiSupport/TaibaiJson"
 	"encoding/json"
 	"log"
+	"time"
 )
 
 type TaibaiClassroom struct {
@@ -30,6 +31,10 @@ func (this *TaibaiClassroom) addParticipant(userId int) *TaibaiClassParticipant 
 	if !ok {
 		p = NewTaibaiClassParticipant(this, &TaibaiUser{UserId: userId}, StudentRole)
 		p.Index = len(this.Participants)
+		p.Rect.X = 20 + (20+200)*p.Index
+		p.Rect.Y = 810 - 200
+		p.Rect.Width = 200
+		p.Rect.Height = 200
 		this.Participants[userId] = p
 	}
 	return p
@@ -49,7 +54,7 @@ func (this *TaibaiClassroom) participantOffline(ws TaibaiUserWsEvent) {
 	this.broadcastClassroomStatus()
 }
 
-func (this * TaibaiClassroom)broadcastClassroomStatus()  {
+func (this *TaibaiClassroom) broadcastClassroomStatus() {
 	classroomStatus := TaibaiJson.JsonObject{}
 	classroomStatus["classroomId"] = this.ClassroomId
 	participantList := TaibaiJson.JsonArray{}
@@ -58,12 +63,18 @@ func (this * TaibaiClassroom)broadcastClassroomStatus()  {
 		participantStatus["index"] = p.Index
 		participantStatus["online"] = p.Online
 		participantStatus["userId"] = p.User.UserId
+		participantStatus["rect"] = p.Rect
 		participantList = append(participantList, participantStatus)
 	}
 	classroomStatus["participantList"] = participantList
 
-	message, _ := json.Marshal(classroomStatus)
-	this.broadcastMessage(string(message))
+	message := TaibaiJson.JsonObject{}
+	message["messageType"] = "classroomStatus"
+	message["messageTime"] = time.Now().Unix()
+	message["messageContent"] = classroomStatus
+
+	wspackage, _ := json.Marshal(message)
+	this.broadcastMessage(string(wspackage))
 }
 
 func (this *TaibaiClassroom) broadcastMessage(message string) {
