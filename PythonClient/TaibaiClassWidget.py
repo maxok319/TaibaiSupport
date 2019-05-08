@@ -7,6 +7,7 @@ import ctypes
 import sys
 from QCefWidget import QCefWidget
 from TaibaiWebsocket import TaibaiWebsocket
+import json
 
 class TaibaiClassWidget(QWidget):
     def __init__(self, parent):
@@ -23,6 +24,8 @@ class TaibaiClassWidget(QWidget):
         self.client.error.connect(self.error)
         self.client.disconnected.connect(self.disconnected)
         self.client.textMessageReceived.connect(self.textMessageReceived)
+
+        self.participantWidgetMap={}
     
     def startWS(self, wsurl):
         self.client.open(QUrl(wsurl))
@@ -36,8 +39,29 @@ class TaibaiClassWidget(QWidget):
     def error(self, error_code):
         print(self.client.errorString())
     
-    def textMessageReceived(self, message):
-        print(message)
+    def textMessageReceived(self, wspackage):
+        print(wspackage)
+        messageObject = json.loads(wspackage)
+        messageType = messageObject["messageType"]
+        messageTime = messageObject["messageTime"]
+        messageContent = messageObject["messageContent"]
+
+        if messageType=="classroomStatus":
+            
+            for participant in messageContent["participantList"]:
+                userId = participant["userId"]
+                if userId not in self.participantWidgetMap:
+                    w = QWidget(self)
+                    layout = QHBoxLayout(w)
+                    layout.addWidget(QLabel(str(userId)))
+                    self.participantWidgetMap[userId] = w
+                    self.participantWidgetMap[userId].show()
+                rect = participant["rect"]
+                self.participantWidgetMap[userId].resize(rect["Width"], rect["Height"])
+                self.participantWidgetMap[userId].move(rect["X"], rect["Y"])
+        
+        
+        
 
     
 

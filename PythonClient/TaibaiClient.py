@@ -7,7 +7,7 @@ def main():
     websocket.enableTrace(True)
     app = QCefApplication(sys.argv)
     widget = TaibaiMainWidget()
-    widget.resize(800, 600)
+    widget.resize(1440, 810)
     widget.show()
     app.exec_()
     

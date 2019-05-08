@@ -6,6 +6,7 @@ import ctypes
 import sys
 from TaibaiClassWidget import TaibaiClassWidget
 from TaibaiLoginWidget import TaibaiLoginWidget
+import json
 
 class TaibaiMainWidget(QWidget):
     def __init__(self):
@@ -24,8 +25,9 @@ class TaibaiMainWidget(QWidget):
         self.loginwidget.joinClicked.connect(self.startJoinClass)
 
     def startJoinClass(self, jsonparams):
-
-        wsurl = "ws://127.0.0.1:8888/ws?classroomId=123&userId=111"
+        param = json.loads(jsonparams)
+        print(param)
+        wsurl = "ws://127.0.0.1:8888/ws?classroomId={}&userId={}".format(param["classroomId"], param["userId"])
         self.layout.setCurrentWidget(self.classwidget)
         self.classwidget.startWS(wsurl)
 
