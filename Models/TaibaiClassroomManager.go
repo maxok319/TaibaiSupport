@@ -44,7 +44,14 @@ func (this *TaibaiClassroomManager) PendingNewWs() {
 		}
 
 		// 让用户上线
-		this.ParticipantOnline(ws.ClassroomId, ws.UserId, ws.Conn)
+		classroom, _ := this.ClassroomMap[ws.ClassroomId]
+		participant := classroom.addParticipant(ws.UserId)
+		participant.SetConn(ws.Conn)
+
+		// 通知教室里其他在线的人 有人上线了
+		message := fmt.Sprintf("%d is online", ws.UserId)
+		classroom.broadcastMessage(message)
+
 	}
 }
 
@@ -57,8 +64,10 @@ func (this *TaibaiClassroomManager) LeavingOldWs() {
 			return
 		}
 
-		// 让用户下线
-		this.ParticipantOffline(ws.ClassroomId, ws.UserId)
+		// 通知教室里其他在线的人 有人掉线了
+		classroom, _ := this.ClassroomMap[ws.ClassroomId]
+		message := fmt.Sprintf("%d is offline", ws.UserId)
+		classroom.broadcastMessage(message)
 	}
 }
 
@@ -77,32 +86,6 @@ func (this *TaibaiClassroomManager) RegisterClassroom(classroom *TaibaiClassroom
 	defer this.OperationRWMux.Unlock()
 
 	this.ClassroomMap[classroom.ClassroomId] = classroom
-}
-
-// 用户上线
-func (this *TaibaiClassroomManager) ParticipantOnline(classroomId, userId int, conn *websocket.Conn) {
-	this.OperationRWMux.Lock()
-	defer this.OperationRWMux.Unlock()
-
-	classroom, _ := this.ClassroomMap[classroomId]
-	participant := classroom.addParticipant(userId)
-	participant.SetConn(conn)
-
-	// 通知教室里其他在线的人 有人上线了
-	message := fmt.Sprintf("%d is online", userId)
-	classroom.broadcastMessage(message)
-}
-
-// 用户下线
-func (this *TaibaiClassroomManager) ParticipantOffline(classroomId, userId int) {
-	this.OperationRWMux.Lock()
-	defer this.OperationRWMux.Unlock()
-
-	classroom, _ := this.ClassroomMap[classroomId]
-
-	// 通知教室里其他在线的人 有人掉线了
-	message := fmt.Sprintf("%d is offline", userId)
-	classroom.broadcastMessage(message)
 }
 
 var TaibaiClassroomManagerInstance *TaibaiClassroomManager

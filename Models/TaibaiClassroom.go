@@ -23,6 +23,7 @@ func (this *TaibaiClassroom) addParticipant(userId int) *TaibaiClassParticipant 
 	p, ok := this.Participants[userId]
 	if !ok {
 		p = NewTaibaiClassParticipant(this, &TaibaiUser{UserId: userId}, StudentRole)
+		p.Index = len(this.Participants)-1
 		this.Participants[userId] = p
 	}
 	return p
