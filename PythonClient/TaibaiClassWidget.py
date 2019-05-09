@@ -7,6 +7,7 @@ import ctypes
 import sys
 from QCefWidget import QCefWidget
 from TaibaiWebsocket import TaibaiWebsocket
+from TaibaiVideoWidget import TaibaiVideoWidget
 import json
 
 class TaibaiClassWidget(QWidget):
@@ -51,16 +52,16 @@ class TaibaiClassWidget(QWidget):
             for participant in messageContent["participantList"]:
                 userId = participant["userId"]
                 if userId not in self.participantWidgetMap:
-                    w = QWidget(self)
-                    layout = QHBoxLayout(w)
-                    layout.addWidget(QLabel(str(userId)))
+                    w = TaibaiVideoWidget(self)
+                    w.layout.addWidget(QLabel(str(userId)))
                     self.participantWidgetMap[userId] = w
                     self.participantWidgetMap[userId].show()
                 rect = participant["rect"]
                 self.participantWidgetMap[userId].resize(rect["Width"], rect["Height"])
                 self.participantWidgetMap[userId].move(rect["X"], rect["Y"])
-        
-        
+    
+    
+
         
 
     
