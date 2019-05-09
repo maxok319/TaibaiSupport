@@ -54,6 +54,7 @@ class TaibaiClassWidget(QWidget):
                 if userId not in self.participantWidgetMap:
                     w = TaibaiVideoWidget(self)
                     w.layout.addWidget(QLabel(str(userId)))
+                    w.setMoveableArea(QRect(200, 100, 600, 500))
                     self.participantWidgetMap[userId] = w
                     self.participantWidgetMap[userId].show()
                 rect = participant["rect"]
