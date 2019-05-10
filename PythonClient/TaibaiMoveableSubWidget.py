@@ -16,7 +16,6 @@ class TaibaiMoveableSubWidget(QWidget):
         if event.button() == Qt.LeftButton:
             self.origin_position = self.pos()
             self.dragPosition = event.globalPos()
-            event.accept()
 
     def mouseMoveEvent(self, event):
         if event.buttons() & Qt.LeftButton:
@@ -44,8 +43,5 @@ class TaibaiMoveableSubWidget(QWidget):
                     target_topleft.setX(parent_bottomRight.x() - self.size().width())
                 if target_bottomRight.y() > parent_bottomRight.y():
                     target_topleft.setY(parent_bottomRight.y() - self.size().height())
-                self.move(target_topleft)
-                event.accept()
 
             self.move(target_topleft)
-            event.accept()

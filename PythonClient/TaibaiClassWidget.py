@@ -8,6 +8,8 @@ import sys
 from QCefWidget import QCefWidget
 from TaibaiWebsocket import TaibaiWebsocket
 from TaibaiVideoWidget import TaibaiVideoWidget
+from TaibaiUtils import *
+from TaibaiConfig import *
 import json
 
 class TaibaiClassWidget(QWidget):
@@ -54,18 +56,63 @@ class TaibaiClassWidget(QWidget):
                 if userId not in self.participantWidgetMap:
                     w = TaibaiVideoWidget(self)
                     w.layout.addWidget(QLabel(str(userId)))
-                    w.setMoveableArea(QRect(200, 100, 600, 500))
                     self.participantWidgetMap[userId] = w
                     self.participantWidgetMap[userId].show()
-                rect = participant["rect"]
-                self.participantWidgetMap[userId].resize(rect["Width"], rect["Height"])
-                self.participantWidgetMap[userId].move(rect["X"], rect["Y"])
-    
-    
+                self.participantWidgetMap[userId].serverRect = participant["rect"]
+                self.participantWidgetMap[userId].setMoveableArea(self.courseArea)
+                self.participantWidgetMap[userId].adjustPosition()
 
-        
+    def resizeEvent(self, event):
+        self.courseArea = StandardAreaInRect(event.size(), taibai_config["standard_coursearea_size"])
+        for participantWidget in self.participantWidgetMap.values():
+            participantWidget.setMoveableArea(self.courseArea)
+            participantWidget.adjustPosition()
 
-    
+    # 把本地的换成server端的
+    def mapToServer(self, localRect):
+        localX = localRect.x()
+        localY = localRect.y()
+        localWidth = localRect.width()
+        localHeight = localRect.height()
+
+        courseAreaX = self.courseArea.x()
+        courseAreaY = self.courseArea.y()
+        courseAreaWidth = self.courseArea.width()
+        courseAreaHeight = self.courseArea.height()
+
+        serverRectX = (localX - courseAreaX) / courseAreaWidth * taibai_config["standard_coursearea_width"]
+        serverRectY = (localY - courseAreaY) / courseAreaHeight * taibai_config["standard_coursearea_height"]  
+        serverRectWidth = localWidth / courseAreaWidth * taibai_config["standard_coursearea_width"]
+        serverRectHeight = localHeight / courseAreaHeight * taibai_config["standard_coursearea_height"]
+
+        serverRect = {}
+        serverRect["X"] = serverRectX
+        serverRect["Y"] = serverRectY
+        serverRect["Width"] = serverRectWidth
+        serverRect["Height"] = serverRectHeight
+
+        return serverRect
+
+    # 把server端的换成本地的
+    def mapFromServer(self, serverRect):
+        serverRectX = serverRect["X"]
+        serverRectY = serverRect["Y"]
+        serverRectWidth = serverRect["Width"]
+        serverRectHeight = serverRect["Height"]
+
+        courseAreaX = self.courseArea.x()
+        courseAreaY = self.courseArea.y()
+        courseAreaWidth = self.courseArea.width()
+        courseAreaHeight = self.courseArea.height()
+
+        localX = courseAreaX + serverRectX * courseAreaWidth / taibai_config["standard_coursearea_width"]
+        localY = courseAreaY + serverRectY * courseAreaHeight / taibai_config["standard_coursearea_height"]
+        localWidth = serverRectWidth * courseAreaWidth / taibai_config["standard_coursearea_width"]
+        localHeight = serverRectHeight * courseAreaHeight / taibai_config["standard_coursearea_height"]
+
+        localRect = QRect(localX, localY, localWidth, localHeight)
+
+        return localRect
 
 
-        
+
