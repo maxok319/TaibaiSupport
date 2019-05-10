@@ -11,6 +11,7 @@ from TaibaiVideoWidget import TaibaiVideoWidget
 from TaibaiUtils import *
 from TaibaiConfig import *
 import json
+import time
 
 class TaibaiClassWidget(QWidget):
     def __init__(self, parent):
@@ -55,18 +56,20 @@ class TaibaiClassWidget(QWidget):
                 userId = participant["userId"]
                 if userId not in self.participantWidgetMap:
                     w = TaibaiVideoWidget(self)
+                    w.userId = userId
                     w.layout.addWidget(QLabel(str(userId)))
                     self.participantWidgetMap[userId] = w
                     self.participantWidgetMap[userId].show()
+                    w.positionChanged.connect(self.videoWidgetPositionChanged)
                 self.participantWidgetMap[userId].serverRect = participant["rect"]
                 self.participantWidgetMap[userId].setMoveableArea(self.courseArea)
-                self.participantWidgetMap[userId].adjustPosition()
+                self.participantWidgetMap[userId].setGeometry(self.mapFromServer(participant["rect"]))
 
     def resizeEvent(self, event):
         self.courseArea = StandardAreaInRect(event.size(), taibai_config["standard_coursearea_size"])
         for participantWidget in self.participantWidgetMap.values():
             participantWidget.setMoveableArea(self.courseArea)
-            participantWidget.adjustPosition()
+            participantWidget.setGeometry(self.mapFromServer(participantWidget.serverRect))
 
     # 把本地的换成server端的
     def mapToServer(self, localRect):
@@ -86,10 +89,10 @@ class TaibaiClassWidget(QWidget):
         serverRectHeight = localHeight / courseAreaHeight * taibai_config["standard_coursearea_height"]
 
         serverRect = {}
-        serverRect["X"] = serverRectX
-        serverRect["Y"] = serverRectY
-        serverRect["Width"] = serverRectWidth
-        serverRect["Height"] = serverRectHeight
+        serverRect["X"] = int(serverRectX)
+        serverRect["Y"] = int(serverRectY)
+        serverRect["Width"] = int(serverRectWidth)
+        serverRect["Height"] = int(serverRectHeight)
 
         return serverRect
 
@@ -111,8 +114,23 @@ class TaibaiClassWidget(QWidget):
         localHeight = serverRectHeight * courseAreaHeight / taibai_config["standard_coursearea_height"]
 
         localRect = QRect(localX, localY, localWidth, localHeight)
-
         return localRect
 
+    def videoWidgetPositionChanged(self, userId):
+        for participantWidget in self.participantWidgetMap.values():
+            if participantWidget.userId == userId:
+                serverRect = self.mapToServer(participantWidget.geometry())
+
+                event = {
+                    "eventTime" : int(time.time()),
+                    "eventType" : "videoPositionChanged",
+                    "eventProducer": 0,
+                    "eventContent" : {
+                        "userId" : userId,
+                        "rect" : serverRect
+                    }
+                }
+                package = json.dumps(event)
+                self.client.sendTextMessage(package)
 
 
