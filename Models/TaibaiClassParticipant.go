@@ -2,6 +2,8 @@ package Models
 
 import (
 	"context"
+	"encoding/json"
+	"github.com/bitly/go-simplejson"
 	"github.com/gorilla/websocket"
 	"log"
 	"sync"
@@ -61,7 +63,11 @@ func (this *TaibaiClassParticipant) SetConn(conn *websocket.Conn) {
 }
 
 func (this *TaibaiClassParticipant) ReadLoop(Conn *websocket.Conn) {
-	defer func() { recover() }()
+	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("捕获到的错误：%v\n", r)
+		}
+	}()
 	for {
 		_, message, err := Conn.ReadMessage()
 		if err != nil {
@@ -80,6 +86,27 @@ func (this *TaibaiClassParticipant) ReadLoop(Conn *websocket.Conn) {
 			return
 		} else {
 			log.Printf("recv: %s", message)
+
+
+			eventJson, err := simplejson.NewJson(message)
+			if err != nil {
+				log.Println(err)
+				continue
+			}
+			eventType := eventJson.Get("eventType").MustString()
+			eventContent := eventJson.Get("eventContent")
+
+			if eventType == "videoPositionChanged" {
+				userId := eventContent.Get("userId").MustInt()
+
+				rect := TaibaiRect{}
+				rectstr, _ := json.Marshal(eventContent.Get("rect").Interface())
+				json.Unmarshal(rectstr, &rect)
+
+				this.Classroom.participantPositionChanged(userId, rect)
+			}
+
+			// {"eventTime": 1557489041, "eventType": "videoPositionChanged", "eventProducer": 0, "eventContent": {"userId": 111, "rect": {"X": 189.0, "Y": 506.99999999999994, "Width": 200.0, "Height": 200.0}}}
 		}
 	}
 

@@ -1,7 +1,7 @@
 package TaibaiJson
 
-type Object interface{}
-type Array []Object
+type JsonValue interface{}
+type Array []JsonValue
 
-type JsonObject map[string]Object
+type JsonObject map[string]JsonValue
 type JsonArray Array

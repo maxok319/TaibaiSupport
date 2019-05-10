@@ -54,6 +54,13 @@ func (this *TaibaiClassroom) participantOffline(ws TaibaiUserWsEvent) {
 	this.broadcastClassroomStatus()
 }
 
+func (this *TaibaiClassroom) participantPositionChanged(userId int, rect TaibaiRect){
+	if participant, ok:= this.Participants[userId]; ok{
+		participant.Rect = rect
+		this.broadcastClassroomStatus()
+	}
+}
+
 func (this *TaibaiClassroom) broadcastClassroomStatus() {
 	classroomStatus := TaibaiJson.JsonObject{}
 	classroomStatus["classroomId"] = this.ClassroomId
