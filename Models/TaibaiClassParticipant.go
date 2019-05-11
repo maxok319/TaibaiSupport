@@ -71,44 +71,52 @@ func (this *TaibaiClassParticipant) ReadLoop(Conn *websocket.Conn) {
 	for {
 		_, message, err := Conn.ReadMessage()
 		if err != nil {
-			// 有异常的话 肯定要
-			log.Println("read:", err)
-			wsEvent := TaibaiUserWsEvent{
-				ClassroomId: this.Classroom.ClassroomId,
-				UserId:      this.User.UserId,
-				Conn:        nil,
-			}
+			log.Println("Read WS:", err)
 			if Conn == this.Conn {
 				this.Conn = nil
 				this.Online = false
+
+				wsEvent := TaibaiUserWsEvent{
+					ClassroomId: this.Classroom.ClassroomId,
+					UserId:      this.User.UserId,
+					Conn:        nil,
+				}
 				TaibaiClassroomManagerInstance.LeavingWsChan <- wsEvent
 			}
 			return
+
 		} else {
-			log.Printf("recv: %s", message)
-
-
-			eventJson, err := simplejson.NewJson(message)
-			if err != nil {
-				log.Println(err)
-				continue
-			}
-			eventType := eventJson.Get("eventType").MustString()
-			eventContent := eventJson.Get("eventContent")
-
-			if eventType == "videoPositionChanged" {
-				userId := eventContent.Get("userId").MustInt()
-
-				rect := TaibaiRect{}
-				rectstr, _ := json.Marshal(eventContent.Get("rect").Interface())
-				json.Unmarshal(rectstr, &rect)
-
-				this.Classroom.participantPositionChanged(userId, rect)
-			}
-
-			// {"eventTime": 1557489041, "eventType": "videoPositionChanged", "eventProducer": 0, "eventContent": {"userId": 111, "rect": {"X": 189.0, "Y": 506.99999999999994, "Width": 200.0, "Height": 200.0}}}
+			this.ReceiveMessage(message)
 		}
 	}
+
+}
+
+func (this *TaibaiClassParticipant) ReceiveMessage(message []byte)  {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("Receive Message：%v\n", r)
+		}
+	}()
+
+	log.Println("receive", string(message))
+	eventJson, err := simplejson.NewJson(message)
+	if err != nil {
+		log.Println(err)
+	}
+
+	eventType := eventJson.Get("eventType").MustString()
+	eventContent := eventJson.Get("eventContent")
+
+	if eventType == "videoPositionChanged" {
+		userId := eventContent.Get("userId").MustInt()
+		rect := TaibaiRect{}
+		rectstr, _ := json.Marshal(eventContent.Get("rect").Interface())
+		json.Unmarshal(rectstr, &rect)
+		this.Classroom.participantPositionChanged(userId, rect)
+	}
+
+	// {"eventTime": 1557489041, "eventType": "videoPositionChanged", "eventProducer": 0, "eventContent": {"userId": 111, "rect": {"X": 189.0, "Y": 506.99999999999994, "Width": 200.0, "Height": 200.0}}}
 
 }
 
