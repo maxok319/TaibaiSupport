@@ -3,7 +3,7 @@ package Models
 type TaibaiEventType int
 
 const (
-	EventType_UserOnlineStatusChangd TaibaiMessageType = iota
+	EventType_UserOnlineStatusChangd TaibaiEventType = iota
 	EventType_UserVideoPositionChanged
 )
 

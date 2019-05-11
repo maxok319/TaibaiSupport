@@ -57,7 +57,6 @@ func (this *TaibaiClassroom) participantOffline(ws TaibaiUserWsEvent) {
 func (this *TaibaiClassroom) participantPositionChanged(userId int, rect TaibaiRect){
 	if participant, ok:= this.Participants[userId]; ok{
 		participant.Rect = rect
-		this.broadcastClassroomStatus()
 	}
 }
 
@@ -93,5 +92,16 @@ func (this *TaibaiClassroom) broadcastMessage(message string) {
 func (this *TaibaiClassroom) singleMessage(userId int, message string) {
 	if p, ok := this.Participants[userId]; ok {
 		p.SendMessage(message)
+	}
+}
+
+func (this *TaibaiClassroom) sendClassroomMessage(message *TaibaiClassroomMessage)  {
+	messageBytes,_ := json.Marshal(message)
+	if len(message.MessageReceiver) == 0{
+		this.broadcastMessage(string(messageBytes))
+	} else {
+		for userId := range message.MessageReceiver{
+			this.singleMessage(userId, string(messageBytes))
+		}
 	}
 }

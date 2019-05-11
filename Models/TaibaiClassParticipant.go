@@ -1,6 +1,8 @@
 package Models
 
 import (
+	"TaiBaiSupport/TaibaiJson"
+	"TaiBaiSupport/TaibaiUtils"
 	"context"
 	"encoding/json"
 	"github.com/bitly/go-simplejson"
@@ -100,24 +102,18 @@ func (this *TaibaiClassParticipant) ReceiveMessage(message []byte)  {
 	}()
 
 	log.Println("receive", string(message))
-	eventJson, err := simplejson.NewJson(message)
-	if err != nil {
+
+	event := &TaibaiClassroomEvent{}
+	err := json.Unmarshal(message, event)
+	if err !=nil{
 		log.Println(err)
+		return
 	}
 
-	eventType := eventJson.Get("eventType").MustString()
-	eventContent := eventJson.Get("eventContent")
-
-	if eventType == "videoPositionChanged" {
-		userId := eventContent.Get("userId").MustInt()
-		rect := TaibaiRect{}
-		rectstr, _ := json.Marshal(eventContent.Get("rect").Interface())
-		json.Unmarshal(rectstr, &rect)
-		this.Classroom.participantPositionChanged(userId, rect)
+	eventType := event.EventType
+	if eventType == EventType_UserVideoPositionChanged {
+		this.onUserVideoPositionChanged(event)
 	}
-
-	// {"eventTime": 1557489041, "eventType": "videoPositionChanged", "eventProducer": 0, "eventContent": {"userId": 111, "rect": {"X": 189.0, "Y": 506.99999999999994, "Width": 200.0, "Height": 200.0}}}
-
 }
 
 func (this *TaibaiClassParticipant) SendMessage(message string) {
@@ -126,3 +122,39 @@ func (this *TaibaiClassParticipant) SendMessage(message string) {
 		this.Conn.WriteMessage(websocket.TextMessage, []byte(message))
 	}
 }
+
+func (this *TaibaiClassParticipant) onUserVideoPositionChanged(event *TaibaiClassroomEvent)  {
+	/*
+		{
+		    "eventTime": 1557489041,
+		    "eventType": 1,
+		    "eventProducer": 0,
+		    "eventContent": {
+		        "userId": 111,
+		        "rect": {
+		            "X": 189.0,
+		            "Y": 506.99999999999994,
+		            "Width": 200.0,
+		            "Height": 200.0
+		        }
+		    }
+		}
+	*/
+	eventContent := event.EventContent
+	eventContentObject := simplejson.New()
+	eventContentObject.SetPath([]string{}, eventContent)
+
+	userId := eventContentObject.Get("userId").MustInt()
+	rect := TaibaiRect{}
+	TaibaiUtils.SimpleJsonToStruct(eventContentObject.Get("rect"), &TaibaiRect{})
+	this.Classroom.participantPositionChanged(userId, rect)
+
+	message := NewClassroomMessage(MessageType_UpdateUserVideoPosition, this.User.UserId, []int{})
+	// event里只设置了一个人的位置 但可能造成了多人的位置改动 1V1模式等
+	messageContent := TaibaiJson.JsonArray{}
+	messageContent = append(messageContent, eventContent)
+	message.MessageContent =  messageContent
+	message.MessageOriginEvent = *event
+	this.Classroom.sendClassroomMessage(message)
+}
+
