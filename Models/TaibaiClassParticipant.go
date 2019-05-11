@@ -146,7 +146,7 @@ func (this *TaibaiClassParticipant) onUserVideoPositionChanged(event *TaibaiClas
 
 	userId := eventContentObject.Get("userId").MustInt()
 	rect := TaibaiRect{}
-	TaibaiUtils.SimpleJsonToStruct(eventContentObject.Get("rect"), &TaibaiRect{})
+	TaibaiUtils.SimpleJsonToStruct(eventContentObject.Get("rect"), &rect)
 	this.Classroom.participantPositionChanged(userId, rect)
 
 	message := NewClassroomMessage(MessageType_UpdateUserVideoPosition, this.User.UserId, []int{})
