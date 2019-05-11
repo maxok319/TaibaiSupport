@@ -5,6 +5,7 @@ type TaibaiEventType int
 const (
 	EventType_UserOnlineStatusChangd TaibaiEventType = iota
 	EventType_UserVideoPositionChanged
+	EventType_1V1StateChanged
 )
 
 type TaibaiClassroomEvent struct {
