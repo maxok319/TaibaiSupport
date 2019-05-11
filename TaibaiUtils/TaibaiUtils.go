@@ -1,6 +1,8 @@
 package TaibaiUtils
 
 import (
+	"encoding/json"
+	"github.com/bitly/go-simplejson"
 	"strconv"
 	"sync"
 	"time"
@@ -36,4 +38,11 @@ func generateMessageId() func()int {
 var GenerateMessageId func()int
 func init() {
 	GenerateMessageId = generateMessageId()
+}
+
+
+func SimpleJsonToStruct(from *simplejson.Json, to interface{})  error {
+	str, _ := json.Marshal(from.Interface())
+	err:= json.Unmarshal(str, to)
+	return err
 }
