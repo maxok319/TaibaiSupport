@@ -44,25 +44,7 @@ func (this *TaibaiClassroom) addParticipant(userId int) *TaibaiClassParticipant 
 	return p
 }
 
-func (this *TaibaiClassroom) participantOnline(ws TaibaiUserWsEvent) {
-	participant := this.addParticipant(ws.UserId)
-	participant.SetConn(ws.Conn)
 
-	log.Printf("%d is online", ws.UserId)
-	this.broadcastClassroomStatus()
-}
-
-func (this *TaibaiClassroom) participantOffline(ws TaibaiUserWsEvent) {
-	log.Printf("%d is offline", ws.UserId)
-	// 通知教室里其他在线的人 有人上线了
-	this.broadcastClassroomStatus()
-}
-
-func (this *TaibaiClassroom) participantPositionChanged(userId int, rect TaibaiRect){
-	if participant, ok:= this.Participants[userId]; ok{
-		participant.Rect = rect
-	}
-}
 
 func (this *TaibaiClassroom) broadcastClassroomStatus() {
 	classroomStatus := TaibaiJson.JsonObject{}
@@ -123,7 +105,7 @@ func (this *TaibaiClassroom) saveActionIntoRedis (action interface{}) {
 	TaibaiDBHelper.GetRedisClient().RPush(listKey, action)
 }
 
-func (this *TaibaiClassroom) onParticipantReceivedMessage(participant *TaibaiClassParticipant, message []byte ){
+func (this *TaibaiClassroom) onParticipantReceivedEvent(participant *TaibaiClassParticipant, message []byte ){
 	event := &TaibaiClassroomEvent{}
 	err := json.Unmarshal(message, event)
 	if err != nil {
@@ -145,6 +127,20 @@ func (this *TaibaiClassroom) onParticipantReceivedMessage(participant *TaibaiCla
 // 1. server转发action给别的server
 // 2. server合成message给其clients
 // 3. server将message保存至redis
+
+func (this *TaibaiClassroom) onParticipantOnline(ws TaibaiUserWsEvent) {
+	participant := this.addParticipant(ws.UserId)
+	participant.SetConn(ws.Conn)
+
+	log.Printf("%d is online", ws.UserId)
+	this.broadcastClassroomStatus()
+}
+
+func (this *TaibaiClassroom) onParticipantOffline(ws TaibaiUserWsEvent) {
+	log.Printf("%d is offline", ws.UserId)
+	// 通知教室里其他在线的人 有人上线了
+	this.broadcastClassroomStatus()
+}
 
 func (this *TaibaiClassroom) onUserVideoPositionChanged(event *TaibaiClassroomEvent) {
 	/*
@@ -170,7 +166,9 @@ func (this *TaibaiClassroom) onUserVideoPositionChanged(event *TaibaiClassroomEv
 	userId := eventContentObject.Get("userId").MustInt()
 	rect := TaibaiRect{}
 	TaibaiUtils.SimpleJsonToStruct(eventContentObject.Get("rect"), &rect)
-	this.participantPositionChanged(userId, rect)
+	if participant, ok:= this.Participants[userId]; ok{
+		participant.Rect = rect
+	}
 
 	message := NewClassroomMessage(MessageType_UpdateUserVideoPosition, 0, []int{})
 	// event里只设置了一个人的位置 但可能造成了多人的位置改动 1V1模式等
@@ -218,7 +216,9 @@ func (this *TaibaiClassroom) on1v1StateChanged(event *TaibaiClassroomEvent) {
 		}
 
 		userId := particpant.User.UserId
-		this.participantPositionChanged(userId, rect)
+		if participant, ok:= this.Participants[userId]; ok{
+			participant.Rect = rect
+		}
 
 		particpantPosition := TaibaiJson.JsonObject{
 			"userId": userId,

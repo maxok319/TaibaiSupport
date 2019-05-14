@@ -99,7 +99,7 @@ func (this *TaibaiClassParticipant) ReceiveMessage(message []byte) {
 
 	log.Println("receive", string(message))
 
-	this.Classroom.onParticipantReceivedMessage(this, message)
+	this.Classroom.onParticipantReceivedEvent(this, message)
 }
 
 func (this *TaibaiClassParticipant) SendMessage(message string) {

@@ -45,7 +45,7 @@ func (this *TaibaiClassroomManager) PendingNewWs() {
 		}
 
 		// 让用户加入教室
-		classroom.participantOnline(ws)
+		classroom.onParticipantOnline(ws)
 	}
 }
 
@@ -60,7 +60,7 @@ func (this *TaibaiClassroomManager) LeavingOldWs() {
 		}
 
 		// 让用户离开教室
-		classroom.participantOffline(ws)
+		classroom.onParticipantOffline(ws)
 	}
 }
 
