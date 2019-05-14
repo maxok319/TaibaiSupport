@@ -17,18 +17,15 @@ type TaibaiClassroomManager struct {
 	OperationRWMux sync.RWMutex
 
 	PendingWsChan chan TaibaiUserWsEvent
-	LeavingWsChan chan TaibaiUserWsEvent
 }
 
 func NewTaibaiClassroomManager() *TaibaiClassroomManager {
 	M := &TaibaiClassroomManager{
 		ClassroomMap:  make(map[int]*TaibaiClassroom),
 		PendingWsChan: make(chan TaibaiUserWsEvent, 3),
-		LeavingWsChan: make(chan TaibaiUserWsEvent, 3),
 	}
 
 	go M.PendingNewWs()
-	go M.LeavingOldWs()
 
 	return M
 }
@@ -46,21 +43,6 @@ func (this *TaibaiClassroomManager) PendingNewWs() {
 
 		// 让用户加入教室
 		classroom.onParticipantOnline(ws)
-	}
-}
-
-func (this *TaibaiClassroomManager) LeavingOldWs() {
-	for ws := range this.LeavingWsChan {
-		log.Println("leavingOldWs")
-
-		// 没找到教室 直接退出
-		classroom, ok := this.ClassroomMap[ws.ClassroomId]
-		if !ok {
-			return
-		}
-
-		// 让用户离开教室
-		classroom.onParticipantOffline(ws)
 	}
 }
 

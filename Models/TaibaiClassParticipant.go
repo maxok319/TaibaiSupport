@@ -79,7 +79,7 @@ func (this *TaibaiClassParticipant) ReadLoop(Conn *websocket.Conn) {
 					UserId:      this.User.UserId,
 					Conn:        nil,
 				}
-				TaibaiClassroomManagerInstance.LeavingWsChan <- wsEvent
+				this.Classroom.onParticipantOffline(wsEvent)
 			}
 			return
 
