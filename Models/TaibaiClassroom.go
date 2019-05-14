@@ -1,9 +1,11 @@
 package Models
 
 import (
+	"TaiBaiSupport/TaibaiDBHelper"
 	"TaiBaiSupport/TaibaiJson"
 	"encoding/json"
 	"log"
+	"strconv"
 	"time"
 )
 
@@ -97,6 +99,8 @@ func (this *TaibaiClassroom) singleMessage(userId int, message string) {
 
 func (this *TaibaiClassroom) sendClassroomMessage(message *TaibaiClassroomMessage)  {
 	messageBytes,_ := json.Marshal(message)
+	this.saveActionIntoRedis(messageBytes)
+
 	if len(message.MessageReceiver) == 0{
 		this.broadcastMessage(string(messageBytes))
 	} else {
@@ -104,4 +108,9 @@ func (this *TaibaiClassroom) sendClassroomMessage(message *TaibaiClassroomMessag
 			this.singleMessage(userId, string(messageBytes))
 		}
 	}
+}
+
+func (this *TaibaiClassroom) saveActionIntoRedis (action interface{}) {
+	listKey := "actionlist:" + strconv.Itoa(this.ClassroomId)
+	TaibaiDBHelper.GetRedisClient().RPush(listKey, action)
 }
