@@ -12,8 +12,6 @@ import (
 
 type TaibaiClassroom struct {
 	ClassroomId int
-	StartTime   int
-	StopTime    int
 
 	Participants map[int]*TaibaiClassParticipant
 }
@@ -49,7 +47,7 @@ func (this *TaibaiClassroom) getClassroomStatus() TaibaiJson.JsonObject {
 	for _, p := range this.Participants {
 		participantStatus := TaibaiJson.JsonObject{}
 		participantStatus["index"] = p.Index
-		participantStatus["online"] = p.Online
+		participantStatus["online"] = p.Conn != nil
 		participantStatus["userId"] = p.UserId
 		participantStatus["rect"] = p.Rect
 		participantList = append(participantList, participantStatus)
@@ -90,7 +88,7 @@ func (this *TaibaiClassroom) sendEventMQ(event TaibaiClassroomEvent) {
 
 func (this *TaibaiClassroom) saveActionIntoRedis(action interface{}) {
 	listKey := "actionlist:" + strconv.Itoa(this.ClassroomId)
-	TaibaiDBHelper.GetRedisClient().RPush(listKey, action)
+	TaibaiDBHelper.GetInstance().RPush(listKey, action)
 }
 
 func (this *TaibaiClassroom) onParticipantReceiveWSMessage(participant *TaibaiClassParticipant, message []byte) {

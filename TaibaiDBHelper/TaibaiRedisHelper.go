@@ -6,7 +6,7 @@ import (
 
 var redisClientInstance *redis.Client
 
-func GetRedisClient() *redis.Client {
+func GetInstance() *redis.Client {
 	return redisClientInstance
 }
 
