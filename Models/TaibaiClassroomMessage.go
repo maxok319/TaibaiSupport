@@ -13,6 +13,11 @@ const (
 	MessageType_UpdateUserVideoPosition
 )
 
+// 0. client给server一个action
+// 1. server转发action给别的server
+// 2. server合成message给其clients
+// 3. server将message保存至redis
+
 type TaibaiClassroomMessage struct {
 	MessageID          int                  `json:"messageId"`          // 消息ID
 	MessageTime        int64                `json:"messageTime"`        // 消息时间(ns)
