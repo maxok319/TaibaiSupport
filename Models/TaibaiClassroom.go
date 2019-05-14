@@ -31,7 +31,7 @@ func NewTaibaiClassroom(classroomId int) *TaibaiClassroom {
 func (this *TaibaiClassroom) addParticipant(userId int) *TaibaiClassParticipant {
 	p, ok := this.Participants[userId]
 	if !ok {
-		p = NewTaibaiClassParticipant(this, &TaibaiUser{UserId: userId}, StudentRole)
+		p = NewTaibaiClassParticipant(this, userId)
 		p.Index = len(this.Participants)
 		p.Rect.X = 20 + (20+200)*p.Index
 		p.Rect.Y = 810 - 200
@@ -42,7 +42,7 @@ func (this *TaibaiClassroom) addParticipant(userId int) *TaibaiClassParticipant 
 	return p
 }
 
-func (this *TaibaiClassroom) getClassroomStatus() (TaibaiJson.JsonObject){
+func (this *TaibaiClassroom) getClassroomStatus() TaibaiJson.JsonObject {
 	classroomStatus := TaibaiJson.JsonObject{}
 	classroomStatus["classroomId"] = this.ClassroomId
 	participantList := TaibaiJson.JsonArray{}
@@ -50,7 +50,7 @@ func (this *TaibaiClassroom) getClassroomStatus() (TaibaiJson.JsonObject){
 		participantStatus := TaibaiJson.JsonObject{}
 		participantStatus["index"] = p.Index
 		participantStatus["online"] = p.Online
-		participantStatus["userId"] = p.User.UserId
+		participantStatus["userId"] = p.UserId
 		participantStatus["rect"] = p.Rect
 		participantList = append(participantList, participantStatus)
 	}
@@ -58,7 +58,6 @@ func (this *TaibaiClassroom) getClassroomStatus() (TaibaiJson.JsonObject){
 
 	return classroomStatus
 }
-
 
 func (this *TaibaiClassroom) broadcastMessage(message string) {
 	for _, p := range this.Participants {
@@ -72,31 +71,29 @@ func (this *TaibaiClassroom) singleMessage(userId int, message string) {
 	}
 }
 
-func (this *TaibaiClassroom) sendClassroomMessage(message *TaibaiClassroomMessage)  {
-	messageBytes,_ := json.Marshal(message)
+func (this *TaibaiClassroom) sendClassroomMessage(message *TaibaiClassroomMessage) {
+	messageBytes, _ := json.Marshal(message)
 	this.saveActionIntoRedis(messageBytes)
 
-	if len(message.MessageReceiver) == 0{
+	if len(message.MessageReceiver) == 0 {
 		this.broadcastMessage(string(messageBytes))
 	} else {
-		for userId := range message.MessageReceiver{
+		for userId := range message.MessageReceiver {
 			this.singleMessage(userId, string(messageBytes))
 		}
 	}
 }
 
-
-func (this *TaibaiClassroom) sendEventMQ(event TaibaiClassroomEvent){
+func (this *TaibaiClassroom) sendEventMQ(event TaibaiClassroomEvent) {
 
 }
 
-
-func (this *TaibaiClassroom) saveActionIntoRedis (action interface{}) {
+func (this *TaibaiClassroom) saveActionIntoRedis(action interface{}) {
 	listKey := "actionlist:" + strconv.Itoa(this.ClassroomId)
 	TaibaiDBHelper.GetRedisClient().RPush(listKey, action)
 }
 
-func (this *TaibaiClassroom) onParticipantReceiveWSMessage(participant *TaibaiClassParticipant, message []byte ){
+func (this *TaibaiClassroom) onParticipantReceiveWSMessage(participant *TaibaiClassParticipant, message []byte) {
 	event := &TaibaiClassroomEvent{}
 	err := json.Unmarshal(message, event)
 	if err != nil {
@@ -113,7 +110,6 @@ func (this *TaibaiClassroom) onParticipantReceiveWSMessage(participant *TaibaiCl
 	}
 }
 
-
 // 0. client给server一个action
 // 1. server合成message给其clients
 // 2. server将message保存至redis
@@ -129,7 +125,7 @@ func (this *TaibaiClassroom) onParticipantOnline(ws TaibaiUserWsEvent) {
 	event.EventType = EventType_UserOnlineStatusChangd
 	event.EventSender = 0
 	event.EventContent = TaibaiJson.JsonObject{
-		"userId" : ws.UserId,
+		"userId": ws.UserId,
 		"online": true,
 	}
 
@@ -137,7 +133,6 @@ func (this *TaibaiClassroom) onParticipantOnline(ws TaibaiUserWsEvent) {
 	message := NewClassroomMessage(MessageType_UpdateClassroomStatus, 0, []int{})
 	message.MessageOriginEvent = *event
 	message.MessageContent = this.getClassroomStatus()
-
 
 	// 将message保存在redis
 	this.sendClassroomMessage(message)
@@ -151,7 +146,7 @@ func (this *TaibaiClassroom) onParticipantOffline(ws TaibaiUserWsEvent) {
 	event.EventType = EventType_UserOnlineStatusChangd
 	event.EventSender = 0
 	event.EventContent = TaibaiJson.JsonObject{
-		"userId" : ws.UserId,
+		"userId": ws.UserId,
 		"online": false,
 	}
 
@@ -159,7 +154,6 @@ func (this *TaibaiClassroom) onParticipantOffline(ws TaibaiUserWsEvent) {
 	message := NewClassroomMessage(MessageType_UpdateClassroomStatus, 0, []int{})
 	message.MessageOriginEvent = *event
 	message.MessageContent = this.getClassroomStatus()
-
 
 	// 将message保存在redis
 	this.sendClassroomMessage(message)
@@ -188,11 +182,11 @@ func (this *TaibaiClassroom) onUserVideoPositionChanged(event *TaibaiClassroomEv
 
 	userId := eventContentObject.Get("userId").MustInt()
 	rect := TaibaiRect{}
-	if err:= TaibaiUtils.SimpleJsonToStruct(eventContentObject.Get("rect"), &rect); err!=nil{
+	if err := TaibaiUtils.SimpleJsonToStruct(eventContentObject.Get("rect"), &rect); err != nil {
 		log.Println(err)
 		return
 	}
-	if participant, ok:= this.Participants[userId]; ok{
+	if participant, ok := this.Participants[userId]; ok {
 		participant.Rect = rect
 	}
 
@@ -224,7 +218,7 @@ func (this *TaibaiClassroom) on1v1StateChanged(event *TaibaiClassroomEvent) {
 		rect := TaibaiRect{}
 
 		if state1v1State {
-			rect.X = perWidth * particpant.Index + 10
+			rect.X = perWidth*particpant.Index + 10
 			rect.Y = 40
 			rect.Width = perWidth - 20
 			rect.Height = 810 - 80
@@ -235,12 +229,11 @@ func (this *TaibaiClassroom) on1v1StateChanged(event *TaibaiClassroomEvent) {
 			rect.Height = 200
 		}
 
-		userId := particpant.User.UserId
-		if participant, ok:= this.Participants[userId]; ok{
+		userId := particpant.UserId
+		if participant, ok := this.Participants[userId]; ok {
 			participant.Rect = rect
 		}
 	}
-
 
 	message := NewClassroomMessage(MessageType_UpdateClassroomStatus, 0, []int{})
 	message.MessageOriginEvent = *event

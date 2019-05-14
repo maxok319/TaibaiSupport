@@ -5,11 +5,12 @@ import (
 )
 
 var redisClientInstance *redis.Client
-func GetRedisClient() *redis.Client{
+
+func GetRedisClient() *redis.Client {
 	return redisClientInstance
 }
 
-func init(){
+func init() {
 	redisClientInstance = redis.NewClient(&redis.Options{
 		Addr:     "localhost:6379",
 		Password: "", // no password set

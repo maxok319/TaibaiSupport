@@ -1,42 +1,27 @@
 package Models
 
 import (
-	"context"
 	"github.com/gorilla/websocket"
 	"log"
 	"sync"
 )
 
-type TaibaiClassRole int
-
-const (
-	TeacherRole TaibaiClassRole = iota
-	StudentRole
-	ObserverRole
-)
-
 type TaibaiClassParticipant struct {
-	User      *TaibaiUser
-	Classroom *TaibaiClassroom
-	Role      TaibaiClassRole
-	Online    bool
-	Index     int
-	Rect      TaibaiRect
-
-	Conn     *websocket.Conn
-	ConnCtx  context.Context
-	ConnStop context.CancelFunc
-
+	UserId       int
+	Classroom    *TaibaiClassroom
+	Conn         *websocket.Conn
 	operateMutex sync.Mutex
+
+	Online bool
+	Index  int
+	Rect   TaibaiRect
 }
 
-func NewTaibaiClassParticipant(classroom *TaibaiClassroom, user *TaibaiUser, role TaibaiClassRole) *TaibaiClassParticipant {
+func NewTaibaiClassParticipant(classroom *TaibaiClassroom, userId int) *TaibaiClassParticipant {
 	p := &TaibaiClassParticipant{
 		Classroom: classroom,
-		User:      user,
-		Role:      role,
+		UserId:    userId,
 	}
-	p.ConnCtx, p.ConnStop = context.WithCancel(context.Background())
 	return p
 }
 
@@ -76,7 +61,7 @@ func (this *TaibaiClassParticipant) ReadLoop(Conn *websocket.Conn) {
 
 				wsEvent := TaibaiUserWsEvent{
 					ClassroomId: this.Classroom.ClassroomId,
-					UserId:      this.User.UserId,
+					UserId:      this.UserId,
 					Conn:        nil,
 				}
 				this.Classroom.onParticipantOffline(wsEvent)
