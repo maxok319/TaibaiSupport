@@ -188,17 +188,17 @@ func (this *TaibaiClassroom) onUserVideoPositionChanged(event *TaibaiClassroomEv
 
 	userId := eventContentObject.Get("userId").MustInt()
 	rect := TaibaiRect{}
-	TaibaiUtils.SimpleJsonToStruct(eventContentObject.Get("rect"), &rect)
+	if err:= TaibaiUtils.SimpleJsonToStruct(eventContentObject.Get("rect"), &rect); err!=nil{
+		log.Println(err)
+		return
+	}
 	if participant, ok:= this.Participants[userId]; ok{
 		participant.Rect = rect
 	}
 
-	message := NewClassroomMessage(MessageType_UpdateUserVideoPosition, 0, []int{})
-	// event里只设置了一个人的位置 但可能造成了多人的位置改动 1V1模式等
-	messageContent := TaibaiJson.JsonArray{}
-	messageContent = append(messageContent, eventContent)
-	message.MessageContent = messageContent
+	message := NewClassroomMessage(MessageType_UpdateClassroomStatus, 0, []int{})
 	message.MessageOriginEvent = *event
+	message.MessageContent = this.getClassroomStatus()
 	this.sendClassroomMessage(message)
 }
 
@@ -218,9 +218,6 @@ func (this *TaibaiClassroom) on1v1StateChanged(event *TaibaiClassroomEvent) {
 	eventContentObject.SetPath([]string{}, eventContent)
 
 	state1v1State := eventContentObject.Get("1v1").MustBool()
-	message := NewClassroomMessage(MessageType_UpdateUserVideoPosition, 0, []int{})
-	// event里只设置了一个人的位置 但可能造成了多人的位置改动 1V1模式等
-	messageContent := TaibaiJson.JsonArray{}
 
 	perWidth := 1440 / len(this.Participants)
 	for _, particpant := range this.Participants {
@@ -242,16 +239,11 @@ func (this *TaibaiClassroom) on1v1StateChanged(event *TaibaiClassroomEvent) {
 		if participant, ok:= this.Participants[userId]; ok{
 			participant.Rect = rect
 		}
-
-		particpantPosition := TaibaiJson.JsonObject{
-			"userId": userId,
-			"rect": rect,
-		}
-		messageContent = append(messageContent, particpantPosition)
 	}
 
 
-	message.MessageContent = messageContent
+	message := NewClassroomMessage(MessageType_UpdateClassroomStatus, 0, []int{})
 	message.MessageOriginEvent = *event
+	message.MessageContent = this.getClassroomStatus()
 	this.sendClassroomMessage(message)
 }
