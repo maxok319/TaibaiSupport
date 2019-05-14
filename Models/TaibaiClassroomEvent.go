@@ -1,5 +1,7 @@
 package Models
 
+import "time"
+
 type TaibaiEventType int
 
 const (
@@ -9,10 +11,8 @@ const (
 )
 
 // 0. client给server一个action
-// 1. server转发action给别的server
-// 2. server合成message给其clients
-// 3. server将message保存至redis
-
+// 1. server合成message给其clients
+// 2. server将message保存至redis
 
 type TaibaiClassroomEvent struct {
 	EventID       int             `json:"eventId"`       // 事件ID
@@ -20,4 +20,11 @@ type TaibaiClassroomEvent struct {
 	EventType     TaibaiEventType `json:"eventType"`     // 事件类型
 	EventSender   int             `json:"eventSender"`   // 事件主播
 	EventContent  interface{}     `json:"eventContent"`  // 事件内容
+}
+
+func NewTaibaiClassroomEvent() (*TaibaiClassroomEvent) {
+	event := &TaibaiClassroomEvent{}
+	event.EventID = 0
+	event.EventTime = time.Now().Unix()
+	return event
 }

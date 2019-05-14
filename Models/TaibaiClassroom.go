@@ -8,7 +8,6 @@ import (
 	"github.com/bitly/go-simplejson"
 	"log"
 	"strconv"
-	"time"
 )
 
 type TaibaiClassroom struct {
@@ -19,7 +18,6 @@ type TaibaiClassroom struct {
 	Participants map[int]*TaibaiClassParticipant
 }
 
-// 这里要读取库才可以 传入一个json串
 func NewTaibaiClassroom(classroomId int) *TaibaiClassroom {
 
 	classroom := &TaibaiClassroom{
@@ -44,9 +42,7 @@ func (this *TaibaiClassroom) addParticipant(userId int) *TaibaiClassParticipant 
 	return p
 }
 
-
-
-func (this *TaibaiClassroom) broadcastClassroomStatus() {
+func (this *TaibaiClassroom) getClassroomStatus() (TaibaiJson.JsonObject){
 	classroomStatus := TaibaiJson.JsonObject{}
 	classroomStatus["classroomId"] = this.ClassroomId
 	participantList := TaibaiJson.JsonArray{}
@@ -60,14 +56,9 @@ func (this *TaibaiClassroom) broadcastClassroomStatus() {
 	}
 	classroomStatus["participantList"] = participantList
 
-	message := TaibaiJson.JsonObject{}
-	message["messageType"] = "classroomStatus"
-	message["messageTime"] = time.Now().Unix()
-	message["messageContent"] = classroomStatus
-
-	wspackage, _ := json.Marshal(message)
-	this.broadcastMessage(string(wspackage))
+	return classroomStatus
 }
+
 
 func (this *TaibaiClassroom) broadcastMessage(message string) {
 	for _, p := range this.Participants {
@@ -105,7 +96,7 @@ func (this *TaibaiClassroom) saveActionIntoRedis (action interface{}) {
 	TaibaiDBHelper.GetRedisClient().RPush(listKey, action)
 }
 
-func (this *TaibaiClassroom) onParticipantReceivedEvent(participant *TaibaiClassParticipant, message []byte ){
+func (this *TaibaiClassroom) onParticipantReceiveWSMessage(participant *TaibaiClassParticipant, message []byte ){
 	event := &TaibaiClassroomEvent{}
 	err := json.Unmarshal(message, event)
 	if err != nil {
@@ -124,22 +115,54 @@ func (this *TaibaiClassroom) onParticipantReceivedEvent(participant *TaibaiClass
 
 
 // 0. client给server一个action
-// 1. server转发action给别的server
-// 2. server合成message给其clients
-// 3. server将message保存至redis
+// 1. server合成message给其clients
+// 2. server将message保存至redis
 
 func (this *TaibaiClassroom) onParticipantOnline(ws TaibaiUserWsEvent) {
 	participant := this.addParticipant(ws.UserId)
 	participant.SetConn(ws.Conn)
 
 	log.Printf("%d is online", ws.UserId)
-	this.broadcastClassroomStatus()
+
+	// 先将ws链接和断开事件 模拟成标准event
+	event := NewTaibaiClassroomEvent()
+	event.EventType = EventType_UserOnlineStatusChangd
+	event.EventSender = 0
+	event.EventContent = TaibaiJson.JsonObject{
+		"userId" : ws.UserId,
+		"online": true,
+	}
+
+	// 将event合成message 发送给clients
+	message := NewClassroomMessage(MessageType_UpdateClassroomStatus, 0, []int{})
+	message.MessageOriginEvent = *event
+	message.MessageContent = this.getClassroomStatus()
+
+
+	// 将message保存在redis
+	this.sendClassroomMessage(message)
 }
 
 func (this *TaibaiClassroom) onParticipantOffline(ws TaibaiUserWsEvent) {
 	log.Printf("%d is offline", ws.UserId)
-	// 通知教室里其他在线的人 有人上线了
-	this.broadcastClassroomStatus()
+
+	// 先将ws链接和断开事件 模拟成标准event
+	event := NewTaibaiClassroomEvent()
+	event.EventType = EventType_UserOnlineStatusChangd
+	event.EventSender = 0
+	event.EventContent = TaibaiJson.JsonObject{
+		"userId" : ws.UserId,
+		"online": false,
+	}
+
+	// 将event合成message 发送给clients
+	message := NewClassroomMessage(MessageType_UpdateClassroomStatus, 0, []int{})
+	message.MessageOriginEvent = *event
+	message.MessageContent = this.getClassroomStatus()
+
+
+	// 将message保存在redis
+	this.sendClassroomMessage(message)
 }
 
 func (this *TaibaiClassroom) onUserVideoPositionChanged(event *TaibaiClassroomEvent) {

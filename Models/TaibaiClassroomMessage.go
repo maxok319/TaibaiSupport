@@ -9,14 +9,13 @@ import (
 type TaibaiMessageType int
 
 const (
-	MessageType_UpdateUserStatus TaibaiMessageType = iota
+	MessageType_UpdateClassroomStatus TaibaiMessageType = iota
 	MessageType_UpdateUserVideoPosition
 )
 
 // 0. client给server一个action
-// 1. server转发action给别的server
-// 2. server合成message给其clients
-// 3. server将message保存至redis
+// 1. server合成message给其clients
+// 2. server将message保存至redis
 
 type TaibaiClassroomMessage struct {
 	MessageID          int                  `json:"messageId"`          // 消息ID
