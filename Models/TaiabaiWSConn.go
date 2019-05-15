@@ -2,7 +2,6 @@ package Models
 
 import "C"
 import (
-	"TaiBaiSupport/TaibaiJson"
 	"encoding/json"
 	"github.com/gorilla/websocket"
 	"log"
@@ -26,9 +25,9 @@ func NewTaibaiWSConn(classroomId, userId int, conn *websocket.Conn) *TaibaiWSCon
 	// 模拟一个用户上线事件
 	event := NewTaibaiClassroomEvent(EventType_UserOnlineStatusChangd)
 	event.EventContent = map[string]interface{}{
-		"UserOnline":  true,
-		"ClassroomId": classroomId,
-		"UserId":      userId,
+		"online":  true,
+		"classroomId": classroomId,
+		"userId":      userId,
 	}
 	taibaiWSConn.EventChan <- event
 
@@ -50,10 +49,10 @@ func (this *TaibaiWSConn) startReadLoop() {
 
 			// 模拟一个用户掉线事件
 			event := NewTaibaiClassroomEvent(EventType_UserOnlineStatusChangd)
-			event.EventContent = TaibaiJson.JsonObject{
-				"UserOnline":  false,
-				"ClassroomId": this.ClassroomId,
-				"UserId":      this.UserId,
+			event.EventContent = map[string]interface{}{
+				"online":  false,
+				"classroomId": this.ClassroomId,
+				"userId":      this.UserId,
 			}
 			this.EventChan <- event
 			close(this.EventChan)
@@ -65,5 +64,16 @@ func (this *TaibaiWSConn) startReadLoop() {
 			_ = json.Unmarshal(message, &event)
 			this.EventChan <- &event
 		}
+	}
+}
+
+func (this *TaibaiWSConn) SendMessage(message []byte)  {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("捕获到的错误：%v\n", r)
+		}
+	}()
+	if this.Conn != nil{
+		_ = this.Conn.WriteMessage(websocket.TextMessage, message)
 	}
 }

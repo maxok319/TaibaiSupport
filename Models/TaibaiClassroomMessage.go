@@ -1,7 +1,6 @@
 package Models
 
 import (
-	"TaiBaiSupport/TaibaiJson"
 	"TaiBaiSupport/TaibaiUtils"
 	"time"
 )
@@ -10,7 +9,6 @@ type TaibaiMessageType int
 
 const (
 	MessageType_UpdateClassroomStatus TaibaiMessageType = iota
-	MessageType_UpdateUserVideoPosition
 )
 
 // 0. client给server一个action
@@ -34,6 +32,5 @@ func NewClassroomMessage(messageType TaibaiMessageType, sender int, receiver []i
 	m.MessageType = messageType
 	m.MessageSender = sender
 	m.MessageReceiver = receiver
-	m.MessageContent = TaibaiJson.JsonObject{}
 	return &m
 }

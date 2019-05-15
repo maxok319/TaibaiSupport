@@ -15,11 +15,12 @@ const (
 // 2. server将message保存至redis
 
 type TaibaiClassroomEvent struct {
-	EventID      int             `json:"eventId"`      // 事件ID
-	EventTime    int64           `json:"eventTime"`    // 事件时间(ns)
-	EventType    TaibaiEventType `json:"eventType"`    // 事件类型
-	EventSender  int             `json:"eventSender"`  // 事件主播
-	EventContent interface{}     `json:"eventContent"` // 事件内容
+	EventID          int             `json:"eventId"`          // 事件ID
+	EventTime        int64           `json:"eventTime"`        // 事件时间(ns)
+	EventType        TaibaiEventType `json:"eventType"`        // 事件类型
+	EventSender      int             `json:"eventSender"`      // 事件主播
+	EventContent     interface{}     `json:"eventContent"`     // 事件内容
+	EventClassroomId int             `json:"eventClassroomId"` // 事件所在教室
 }
 
 func NewTaibaiClassroomEvent(eventType TaibaiEventType) *TaibaiClassroomEvent {

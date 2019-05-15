@@ -10,7 +10,6 @@ import (
 
 var upgrader = websocket.Upgrader{}
 
-
 // 处理新的链接
 func HandleEventPendingWS(w http.ResponseWriter, r *http.Request) {
 
@@ -25,17 +24,20 @@ func HandleEventPendingWS(w http.ResponseWriter, r *http.Request) {
 	userId, _ := strconv.Atoi(v.Get("userId"))
 
 	// 开启协程去取数据
-	taibaiWSConn := Models.NewTaibaiWSConn(classroomId, userId, conn)
+	taibaiWSConn := TaibaiClassroomManagerInstance.RegisterTaibaiWSConn(classroomId, userId, conn)
 	go handleWSEvent(taibaiWSConn)
 }
 
 func handleWSEvent(taibaiWSConn *Models.TaibaiWSConn)  {
+	// Todo 接MQ 就一股脑的给MQ发送就好了
 	for event := range taibaiWSConn.EventChan{
+		event.EventClassroomId = taibaiWSConn.ClassroomId
 		HandleTaibaiClassroomEvent(event)
 	}
 }
 
 func HandleTaibaiClassroomEvent(event *Models.TaibaiClassroomEvent)  {
+	// Todo 接MQ 一股脑的从MQ拿到消息处理
 	switch event.EventType {
 	case Models.EventType_UserOnlineStatusChangd:
 		HandleEventUserOnlineStatusChanged(event)
