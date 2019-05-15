@@ -112,15 +112,14 @@ func (this *TaibaiClassroom) onParticipantReceiveWSMessage(participant *TaibaiCl
 // 1. server合成message给其clients
 // 2. server将message保存至redis
 
-func (this *TaibaiClassroom) onParticipantOnline(ws TaibaiUserWsEvent) {
+func (this *TaibaiClassroom) onParticipantOnline(ws TaibaiWSConn) {
 	participant := this.addParticipant(ws.UserId)
 	participant.SetConn(ws.Conn)
 
 	log.Printf("%d is online", ws.UserId)
 
 	// 先将ws链接和断开事件 模拟成标准event
-	event := NewTaibaiClassroomEvent()
-	event.EventType = EventType_UserOnlineStatusChangd
+	event := NewTaibaiClassroomEvent(EventType_UserOnlineStatusChangd)
 	event.EventSender = 0
 	event.EventContent = TaibaiJson.JsonObject{
 		"userId": ws.UserId,
@@ -136,12 +135,11 @@ func (this *TaibaiClassroom) onParticipantOnline(ws TaibaiUserWsEvent) {
 	this.sendClassroomMessage(message)
 }
 
-func (this *TaibaiClassroom) onParticipantOffline(ws TaibaiUserWsEvent) {
+func (this *TaibaiClassroom) onParticipantOffline(ws TaibaiWSConn) {
 	log.Printf("%d is offline", ws.UserId)
 
 	// 先将ws链接和断开事件 模拟成标准event
-	event := NewTaibaiClassroomEvent()
-	event.EventType = EventType_UserOnlineStatusChangd
+	event := NewTaibaiClassroomEvent(EventType_UserOnlineStatusChangd)
 	event.EventSender = 0
 	event.EventContent = TaibaiJson.JsonObject{
 		"userId": ws.UserId,

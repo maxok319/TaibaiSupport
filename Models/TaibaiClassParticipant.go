@@ -15,8 +15,8 @@ type TaibaiClassParticipant struct {
 	Conn         *websocket.Conn
 	operateMutex sync.Mutex
 
-	Index  int
-	Rect   TaibaiRect
+	Index int
+	Rect  TaibaiRect
 }
 
 func NewTaibaiClassParticipant(classroom *TaibaiClassroom, userId int) *TaibaiClassParticipant {
@@ -29,34 +29,34 @@ func NewTaibaiClassParticipant(classroom *TaibaiClassroom, userId int) *TaibaiCl
 
 func (this *TaibaiClassParticipant) GetIndex() int {
 	// 去库里查这个index
-	index, err:= TaibaiDBHelper.GetInstance().HGet(this.GetRedisClassroomAndUserIdKey(), "index").Int()
-	if err!=nil{
+	index, err := TaibaiDBHelper.GetInstance().HGet(this.GetRedisClassroomAndUserIdKey(), "index").Int()
+	if err != nil {
 		index = len(this.Classroom.Participants)
 		this.SetIndex(index)
 	}
 	return index
 }
 
-func (this *TaibaiClassParticipant) SetIndex(index int)  {
+func (this *TaibaiClassParticipant) SetIndex(index int) {
 	TaibaiDBHelper.GetInstance().HSet(this.GetRedisClassroomAndUserIdKey(), "index", index)
 }
 
 func (this *TaibaiClassParticipant) GetRect() TaibaiRect {
 	rect := TaibaiRect{}
-	rectStr, err:= TaibaiDBHelper.GetInstance().HGet(this.GetRedisClassroomAndUserIdKey(), "rect").Result()
-	if err!=nil{
-		rect.X = 20 + (20+200) * this.GetIndex()
+	rectStr, err := TaibaiDBHelper.GetInstance().HGet(this.GetRedisClassroomAndUserIdKey(), "rect").Result()
+	if err != nil {
+		rect.X = 20 + (20+200)*this.GetIndex()
 		rect.Y = 810 - 200
 		rect.Width = 200
 		rect.Height = 200
-	} else{
+	} else {
 		_ = json.Unmarshal([]byte(rectStr), &rect)
 	}
 	return rect
 }
 
 func (this *TaibaiClassParticipant) SetRect(rect TaibaiRect) {
-	rectStr, _:= json.Marshal(rect)
+	rectStr, _ := json.Marshal(rect)
 	_ = TaibaiDBHelper.GetInstance().HSet(this.GetRedisClassroomAndUserIdKey(), "rect", string(rectStr))
 }
 
@@ -96,7 +96,7 @@ func (this *TaibaiClassParticipant) ReadLoop(Conn *websocket.Conn) {
 			if Conn == this.Conn {
 				this.Conn = nil
 
-				wsEvent := TaibaiUserWsEvent{
+				wsEvent := TaibaiWSConn{
 					ClassroomId: this.Classroom.ClassroomId,
 					UserId:      this.UserId,
 					Conn:        nil,

@@ -22,8 +22,9 @@ type TaibaiClassroomEvent struct {
 	EventContent interface{}     `json:"eventContent"` // 事件内容
 }
 
-func NewTaibaiClassroomEvent() *TaibaiClassroomEvent {
+func NewTaibaiClassroomEvent(eventType TaibaiEventType) *TaibaiClassroomEvent {
 	event := &TaibaiClassroomEvent{}
+	event.EventType = eventType
 	event.EventID = 0
 	event.EventTime = time.Now().Unix()
 	return event
