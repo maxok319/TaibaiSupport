@@ -14,15 +14,21 @@ func failOnError(err error, msg string) {
 	}
 }
 
+
+// 不断消费mq的消息
+
+
 var RabbitmqEventReceivedChan chan Models.TaibaiClassroomEvent
 var RabbitmqEventTobeSendChan chan Models.TaibaiClassroomEvent
 var ExchangeName = "taibai-exchange"
 
 func init()  {
-	RabbitmqEventReceivedChan = make(chan Models.TaibaiClassroomEvent)
-	RabbitmqEventTobeSendChan = make(chan Models.TaibaiClassroomEvent)
+	RabbitmqEventReceivedChan = make(chan Models.TaibaiClassroomEvent, 3)
+	RabbitmqEventTobeSendChan = make(chan Models.TaibaiClassroomEvent, 3)
 
-	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
+
+
+	conn, err := amqp.Dial("amqp://taibai-support:taibai-support@localhost:5672/")
 	failOnError(err, "Failed to connect to RabbitMQ")
 
 	ch, err := conn.Channel()
@@ -72,10 +78,13 @@ func init()  {
 	failOnError(err, "Failed to register a consumer")
 
 
+	// 此协程将mq消息转为event存起来
 	go func() {
+		log.Println("start listen to rabbitmq")
 		for event := range consumer {
 			taibaiEvent := Models.TaibaiClassroomEvent{}
 			err := json.Unmarshal(event.Body, &taibaiEvent)
+			log.Println("receive origin mq message:", string(event.Body))
 			if err!=nil{
 				log.Printf("failed to Unmarshal to TaibaiEvent message: %s" , event.Body)
 			}else {
@@ -84,6 +93,23 @@ func init()  {
 		}
 	}()
 
+	// 此协程消费mq的event
+	go func(){
+		for event := range RabbitmqEventReceivedChan {
+			eventJson,_ := json.Marshal(event)
+			log.Println("从mq收到：", string(eventJson))
+			switch event.EventType {
+			case Models.EventType_UserOnlineStatusChangd:
+				HandleEventUserOnlineStatusChanged(&event)
+			case Models.EventType_UserVideoPositionChanged:
+				HandleEventUserVideoPositionChanged(&event)
+			case Models.EventType_1V1StateChanged:
+				HandleEvent1V1StateChanged(&event)
+			}
+		}
+	}()
+
+	// 此协程不断给mq发送消息
 	go func() {
 		for event := range RabbitmqEventTobeSendChan {
 			message, _ := json.Marshal(event)
@@ -98,5 +124,6 @@ func init()  {
 				})
 		}
 	}()
+
 
 }

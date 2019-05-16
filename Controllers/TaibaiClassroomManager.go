@@ -36,7 +36,7 @@ func (this *TaibaiClassroomManager) RegisterTaibaiWSConn(classroomId, userId int
 	}
 
 	// redis存入一个学生
-	TaibaiDBHelper.AddUserIntoClassroom(userId, classroomId)
+	TaibaiDBHelper.AddUserIntoClassroom(classroomId, userId)
 
 	// 先停掉之前的
 	taibaiWSConn, wsConnOk := classroomContainer[userId]

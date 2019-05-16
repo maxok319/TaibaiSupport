@@ -39,7 +39,7 @@ func AddClassroom(classroomId int)  {
 	})
 }
 
-func AddUserIntoClassroom(userId, classroomId int)  {
+func AddUserIntoClassroom( classroomId, userId int)  {
 	already, err:= redisClientInstance.SIsMember("studentSet:"+strconv.Itoa(classroomId), userId).Result()
 	if err !=nil{
 		return

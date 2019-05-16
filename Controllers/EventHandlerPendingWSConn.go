@@ -27,7 +27,6 @@ func HandleEventPendingWS(w http.ResponseWriter, r *http.Request) {
 	// 开启协程去取数据
 	taibaiWSConn := TaibaiClassroomManagerInstance.RegisterTaibaiWSConn(classroomId, userId, conn)
 	go handleWSEvent(taibaiWSConn)
-	go handleMQEvent()
 }
 
 // 收到ws消息 都先推给mq
@@ -40,18 +39,3 @@ func handleWSEvent(taibaiWSConn *Models.TaibaiWSConn)  {
 	}
 }
 
-// 不断消费mq的消息
-func handleMQEvent() {
-	for event := range RabbitmqEventReceivedChan {
-		eventJson,_ := json.Marshal(event)
-		log.Println("从mq收到：", string(eventJson))
-		switch event.EventType {
-		case Models.EventType_UserOnlineStatusChangd:
-			HandleEventUserOnlineStatusChanged(&event)
-		case Models.EventType_UserVideoPositionChanged:
-			HandleEventUserVideoPositionChanged(&event)
-		case Models.EventType_1V1StateChanged:
-			HandleEvent1V1StateChanged(&event)
-		}
-   }
-}
