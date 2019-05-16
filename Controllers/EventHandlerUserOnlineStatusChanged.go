@@ -22,7 +22,7 @@ func HandleEventUserOnlineStatusChanged(event *Models.TaibaiClassroomEvent) {
 		return
 	}
 	e, _ := json.Marshal(event.EventContent)
-	log.Println(string(e))
+	log.Println("HandleEventUserOnlineStatusChanged: ", string(e))
 
 	// 设置状态
 	eventContent := simplejson.New()

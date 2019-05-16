@@ -2,6 +2,7 @@ package Controllers
 
 import (
 	"TaiBaiSupport/Models"
+	"encoding/json"
 	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
@@ -26,24 +27,31 @@ func HandleEventPendingWS(w http.ResponseWriter, r *http.Request) {
 	// 开启协程去取数据
 	taibaiWSConn := TaibaiClassroomManagerInstance.RegisterTaibaiWSConn(classroomId, userId, conn)
 	go handleWSEvent(taibaiWSConn)
+	go handleMQEvent()
 }
 
+// 收到ws消息 都先推给mq
 func handleWSEvent(taibaiWSConn *Models.TaibaiWSConn)  {
-	// Todo 接MQ 就一股脑的给MQ发送就好了
 	for event := range taibaiWSConn.EventChan{
 		event.EventClassroomId = taibaiWSConn.ClassroomId
-		HandleTaibaiClassroomEvent(event)
+		eventJson,_ := json.Marshal(event)
+		log.Println("给mq发送：", string(eventJson))
+		RabbitmqEventTobeSendChan <- *event
 	}
 }
 
-func HandleTaibaiClassroomEvent(event *Models.TaibaiClassroomEvent)  {
-	// Todo 接MQ 一股脑的从MQ拿到消息处理
-	switch event.EventType {
-	case Models.EventType_UserOnlineStatusChangd:
-		HandleEventUserOnlineStatusChanged(event)
-	case Models.EventType_UserVideoPositionChanged:
-		HandleEventUserVideoPositionChanged(event)
-	case Models.EventType_1V1StateChanged:
-		HandleEvent1V1StateChanged(event)
-	}
+// 不断消费mq的消息
+func handleMQEvent() {
+	for event := range RabbitmqEventReceivedChan {
+		eventJson,_ := json.Marshal(event)
+		log.Println("从mq收到：", string(eventJson))
+		switch event.EventType {
+		case Models.EventType_UserOnlineStatusChangd:
+			HandleEventUserOnlineStatusChanged(&event)
+		case Models.EventType_UserVideoPositionChanged:
+			HandleEventUserVideoPositionChanged(&event)
+		case Models.EventType_1V1StateChanged:
+			HandleEvent1V1StateChanged(&event)
+		}
+   }
 }

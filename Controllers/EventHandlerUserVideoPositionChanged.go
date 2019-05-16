@@ -16,7 +16,7 @@ func HandleEventUserVideoPositionChanged(event *Models.TaibaiClassroomEvent) {
 	}
 
 	e, _ := json.Marshal(event.EventContent)
-	log.Println(string(e))
+	log.Println("HandleEventUserVideoPositionChanged: ", string(e))
 
 
 	// 设置状态
