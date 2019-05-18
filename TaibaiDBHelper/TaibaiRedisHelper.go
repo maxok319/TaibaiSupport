@@ -1,7 +1,7 @@
 package TaibaiDBHelper
 
 import (
-	"TaiBaiSupport/Models"
+	"TaibaiSupport/Models"
 	"github.com/go-redis/redis"
 	"strconv"
 	"time"

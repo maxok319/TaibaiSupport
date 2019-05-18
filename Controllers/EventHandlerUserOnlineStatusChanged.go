@@ -1,8 +1,8 @@
 package Controllers
 
 import (
-	"TaiBaiSupport/Models"
-	"TaiBaiSupport/TaibaiDBHelper"
+	"TaibaiSupport/Models"
+	"TaibaiSupport/TaibaiDBHelper"
 	"encoding/json"
 	"github.com/bitly/go-simplejson"
 	"log"

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"TaiBaiSupport/Controllers"
+	"TaibaiSupport/Controllers"
 	"log"
 	"net/http"
 	_ "net/http/pprof"

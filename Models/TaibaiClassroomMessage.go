@@ -1,7 +1,7 @@
 package Models
 
 import (
-	"TaiBaiSupport/TaibaiUtils"
+	"TaibaiSupport/TaibaiUtils"
 	"time"
 )
 

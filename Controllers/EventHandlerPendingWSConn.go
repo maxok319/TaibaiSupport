@@ -1,7 +1,7 @@
 package Controllers
 
 import (
-	"TaiBaiSupport/Models"
+	"TaibaiSupport/Models"
 	"encoding/json"
 	"github.com/gorilla/websocket"
 	"log"
