@@ -1,9 +1,17 @@
 version: '3'
 services:
-  taibai-support:
-    build: .
-    ports:
-      - "8888:8888"
-  redis:
+  taibai-redis-service:
+    container_name: taibai-redis-container
     image: "redis:alpine"
 
+  taibai-support-service:
+    container_name: taibai-support-container
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8888:8888"
+    depends_on:
+      - taibai-redis-service
+
+# docker-compose build --build-arg branch_name=master
