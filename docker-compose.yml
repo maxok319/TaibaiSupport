@@ -11,6 +11,8 @@ services:
       dockerfile: Dockerfile
       args:
         branch_name: "master"
+    env_file:
+      - .env
     ports:
       - "8888:8888"
     depends_on:

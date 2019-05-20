@@ -20,15 +20,28 @@ func failOnError(err error, msg string) {
 
 var RabbitmqEventReceivedChan chan Models.TaibaiClassroomEvent
 var RabbitmqEventTobeSendChan chan Models.TaibaiClassroomEvent
-var ExchangeName = "taibai-exchange"
+var ExchangeName = "taibai-exchange-"	// + region
+var QueueName = "taibai-queue-"			// + region + hostname
+var ConsumerName = "taibai-consumer-"	// + region + hostname
 
 func init()  {
+
 	RabbitmqEventReceivedChan = make(chan Models.TaibaiClassroomEvent, 3)
 	RabbitmqEventTobeSendChan = make(chan Models.TaibaiClassroomEvent, 3)
 
+	hostName,_ := os.Hostname()
+	rabbitmq_addr := os.Getenv("rabbitmq_addr")
+	rabbitmq_user := os.Getenv("rabbitmq_user")
+	rabbitmq_passwd := os.Getenv("rabbitmq_passwd")
+	classroom_region := os.Getenv("classroom_region")
 
+	ExchangeName = ExchangeName + classroom_region
+	QueueName = QueueName + classroom_region + "-" +hostName
+	ConsumerName = ConsumerName + classroom_region  + "-" + hostName
 
-	conn, err := amqp.Dial("amqp://taibai-support:taibai-support@localhost:5672/")
+	amqp_link := "amqp://" + rabbitmq_user + ":" + rabbitmq_passwd + "@" + rabbitmq_addr +":5672/"
+	log.Println(amqp_link)
+	conn, err := amqp.Dial(amqp_link)
 	failOnError(err, "Failed to connect to RabbitMQ")
 
 	ch, err := conn.Channel()
@@ -45,9 +58,8 @@ func init()  {
 	)
 	failOnError(err, "Failed to declare exchange")
 
-	hostName,_ := os.Hostname()
 	q, err := ch.QueueDeclare(
-		"taibai-queue-"+hostName,    // name
+		QueueName,    // name
 		false, // durable
 		true, // delete when usused
 		true,  // exclusive
@@ -67,8 +79,8 @@ func init()  {
 	failOnError(err, "Failed to bind exchange with queue")
 
 	consumer, err := ch.Consume(
-		q.Name, // queue
-		"taibai-consumer-"+hostName,     // consumer
+		QueueName, // queue
+		ConsumerName,     // consumer
 		true,   // auto-ack
 		false,  // exclusive
 		false,  // no-local
