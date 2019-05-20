@@ -1,0 +1,9 @@
+version: '3'
+services:
+  taibai-support:
+    build: .
+    ports:
+      - "8888:8888"
+  redis:
+    image: "redis:alpine"
+

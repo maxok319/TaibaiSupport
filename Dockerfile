@@ -2,9 +2,11 @@ FROM golang:1.11.10 as build-env
 MAINTAINER wangxk xinkuanwang@gmail.com
 
 WORKDIR /GoProject/TaibaiSupport
-ADD . /GoProject/TaibaiSupport
+COPY go.mod .
+COPY go.sum .
+RUN go mod download
 
-RUN go mod tidy
+ADD . /GoProject/TaibaiSupport
 RUN go build --ldflags "-extldflags -static"
 
 
