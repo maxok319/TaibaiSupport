@@ -35,3 +35,11 @@ services:
       taibai-support-network:
         ipv4_address: 172.27.1.12
 
+  taibai-support-registrator:
+    image: gliderlabs/registrator
+    environment:
+      - SERVICE_CLASSROOM_REGION
+    container_name: taibai-support-registrator
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock
+    command: "-ip ${host_addr} -tags classroom_region=${classroom_region} consul://${consul_addr}:8500"
