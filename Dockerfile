@@ -14,6 +14,7 @@ RUN go build --ldflags "-extldflags -static"
 
 FROM alpine
 RUN apk --no-cache add tzdata
+ENV TZ=Asia/Shanghai
 WORKDIR /app
 COPY --from=build-env /GoProject/TaibaiSupport/TaibaiSupport /app
 

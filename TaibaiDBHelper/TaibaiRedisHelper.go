@@ -15,7 +15,7 @@ func GetInstance() *redis.Client {
 
 func init() {
 	redisClientInstance = redis.NewClient(&redis.Options{
-		Addr:     "taibai-redis-service:6379",
+		Addr:     "172.27.1.11:6379",
 		Password: "", // no password set
 		DB:       2,  // use default DB
 	})

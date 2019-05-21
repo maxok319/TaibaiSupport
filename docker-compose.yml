@@ -1,8 +1,19 @@
 version: '3'
+networks:
+  taibai-support-network:
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.27.1.0/24
+
 services:
   taibai-redis-service:
     container_name: taibai-redis-container
     image: "redis:alpine"
+    networks:
+      taibai-support-network:
+        ipv4_address: 172.27.1.11
+
 
   taibai-support-service:
     container_name: taibai-support-container
@@ -20,4 +31,7 @@ services:
       - "8888:8888"
     depends_on:
       - taibai-redis-service
+    networks:
+      taibai-support-network:
+        ipv4_address: 172.27.1.12
 

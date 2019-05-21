@@ -5,5 +5,6 @@ export rabbitmq_user=taibai-support
 export rabbitmq_passwd=taibai-support
 export classroom_region=1
 
+docker-compose down
 docker-compose build --build-arg branch_name=beta
 docker-compose up
