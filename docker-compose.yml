@@ -41,7 +41,7 @@ services:
       - "8400:8400"
       - "8500:8500"
       - "8600:8600"
-    command: agent -node=taibai-consul-client-{host_addr} -join=${consul_server_addr} -advertise-wan=${host_addr} -client=0.0.0.0 -datacenter=dc1 -ui
+    command: agent -node=taibai-consul-client-${host_addr} -join=${consul_server_addr} -advertise-wan=${host_addr} -client=0.0.0.0 -datacenter=dc1 -ui
 
   taibai-support-registrator:
     image: gliderlabs/registrator
