@@ -5,6 +5,7 @@ export rabbitmq_user=taibai-support
 export rabbitmq_passwd=taibai-support
 export classroom_region=
 export consul_server_addr=
+export consul_client_no=
 export host_addr=
 
 docker-compose down
