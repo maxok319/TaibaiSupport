@@ -8,6 +8,6 @@ export consul_server_addr=
 export consul_client_no=
 export host_addr=
 
-docker-compose down
+#docker-compose down
 docker-compose build --build-arg branch_name=master
 docker-compose up
