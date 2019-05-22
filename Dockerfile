@@ -4,7 +4,8 @@ MAINTAINER wangxk xinkuanwang@gmail.com
 WORKDIR /GoProject/TaibaiSupport
 COPY go.mod .
 COPY go.sum .
-RUN go mod download
+RUN export GOPROXY=https://goproxy.io
+RUN GOPROXY=https://goproxy.io go mod download
 
 ARG branch_name
 ADD . /GoProject/TaibaiSupport
