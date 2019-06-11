@@ -8,6 +8,8 @@ const (
 	EventType_UserOnlineStatusChangd TaibaiEventType = iota
 	EventType_UserVideoPositionChanged
 	EventType_1V1StateChanged
+	EventType_RTCSDPChanged
+	EventType_RTCICECandidateChanged
 )
 
 // 0. client给server一个action

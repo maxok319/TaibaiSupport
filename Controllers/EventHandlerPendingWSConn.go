@@ -9,10 +9,16 @@ import (
 	"strconv"
 )
 
-var upgrader = websocket.Upgrader{}
+
+func CheckOrigin (r *http.Request) bool{
+	return true
+}
+
+var upgrader = websocket.Upgrader{CheckOrigin:CheckOrigin}
 
 // 处理新的链接
 func HandleEventPendingWS(w http.ResponseWriter, r *http.Request) {
+
 
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {

@@ -117,6 +117,10 @@ func init()  {
 				HandleEventUserVideoPositionChanged(&event)
 			case Models.EventType_1V1StateChanged:
 				HandleEvent1V1StateChanged(&event)
+			case Models.EventType_RTCSDPChanged:
+				HandleEventRTCSDPChanged(&event)
+			case Models.EventType_RTCICECandidateChanged:
+				HandleEventRTCICECandidateChanged(&event)
 			}
 		}
 	}()
