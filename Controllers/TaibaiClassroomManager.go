@@ -76,6 +76,14 @@ func (this *TaibaiClassroomManager)BroadcastClassroomStatus(classroomId int)  {
 	}
 }
 
+func (this *TaibaiClassroomManager) BroadcastOriginEvent(classroomId int,  event Models.TaibaiClassroomEvent)  {
+	message,_ := json.Marshal(event)
+	userWSContainer := this.WSConns[classroomId]
+	for _, conn := range userWSContainer {
+		conn.SendMessage(message)
+	}
+}
+
 var TaibaiClassroomManagerInstance *TaibaiClassroomManager
 
 func init() {

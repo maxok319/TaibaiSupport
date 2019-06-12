@@ -96,7 +96,6 @@ func init()  {
 		for event := range consumer {
 			taibaiEvent := Models.TaibaiClassroomEvent{}
 			err := json.Unmarshal(event.Body, &taibaiEvent)
-			log.Println("receive origin mq message:", string(event.Body))
 			if err!=nil{
 				log.Printf("failed to Unmarshal to TaibaiEvent message: %s" , event.Body)
 			}else {

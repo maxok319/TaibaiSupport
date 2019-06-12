@@ -13,4 +13,7 @@ func HandleEventRTCICECandidateChanged(event *Models.TaibaiClassroomEvent) {
 
 	e, _ := json.Marshal(event.EventContent)
 	log.Println("HandleEventRTCICECandidateChanged: ", string(e))
+
+	// 直接广播
+	TaibaiClassroomManagerInstance.BroadcastOriginEvent(event.EventClassroomId, *event)
 }
