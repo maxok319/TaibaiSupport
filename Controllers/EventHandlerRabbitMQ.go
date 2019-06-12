@@ -3,6 +3,7 @@ package Controllers
 import (
 	"TaibaiSupport/Models"
 	"encoding/json"
+	"fmt"
 	"github.com/streadway/amqp"
 	"log"
 	"os"
@@ -137,6 +138,9 @@ func init()  {
 					ContentType: "text/plain",
 					Body:        message,
 				})
+			if err != nil {
+				fmt.Println("send message to mq error: ", err)
+			}
 		}
 	}()
 
